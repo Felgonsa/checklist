@@ -3,6 +3,9 @@ const db = require('../db/db.js');
 const fs = require('fs'); // Importe o módulo 'fs' no topo do arquivo
 const path = require('path'); // Importe o módulo 'path' também
 const PDFDocument = require('pdfkit');
+const { S3Client, PutObjectCommand } = require("@aws-sdk/client-s3");
+const crypto = require('crypto'); // Módulo nativo do Node.js
+const axios = require('axios');
 
 // --- Controller para Itens Padrão do Checklist ---
 
@@ -16,6 +19,14 @@ const getChecklistItens = async (req, res) => {
     res.status(500).json({ error: 'Erro interno do servidor' });
   }
 };
+
+const s3 = new S3Client({
+  region: process.env.AWS_REGION,
+  credentials: {
+    accessKeyId: process.env.AWS_ACCESS_KEY_ID,
+    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
+  }
+});
 
 
 // --- Controllers para Ordem de Serviço (OS) ---
@@ -65,8 +76,29 @@ const getOrdemServicoById = async (req, res) => {
     ordemServico.respostas = respostasResult.rows;
 
     // 3. Busca as fotos associadas
-    const fotosResult = await db.query('SELECT * FROM checklist_foto WHERE os_id = $1', [id]);
-    ordemServico.fotos = fotosResult.rows;
+    if (fotosResult.rows.length > 0) {
+      doc.addPage();
+      doc.fontSize(14).text('Fotos Anexadas', { underline: true });
+      doc.moveDown();
+
+      ordemServico.fotos = fotosResult.rows;
+
+      // O loop agora é assíncrono para baixar as imagens
+      for (const foto of fotosResult.rows) {
+        try {
+          // Baixa a imagem da URL do S3 como um buffer
+          const response = await axios.get(foto.caminho_arquivo, { responseType: 'arraybuffer' });
+          const imageBuffer = Buffer.from(response.data, 'binary');
+
+          doc.image(imageBuffer, { width: 400, align: 'center' });
+          doc.moveDown();
+        } catch (imgError) {
+          console.error(`Não foi possível carregar a imagem ${foto.caminho_arquivo}:`, imgError);
+          doc.fillColor('red').text(`[Imagem não pôde ser carregada: ${foto.id}]`, { align: 'center' });
+          doc.moveDown();
+        }
+      }
+    }
 
     res.status(200).json(ordemServico);
   } catch (error) {
@@ -118,30 +150,41 @@ const saveChecklistRespostas = async (req, res) => {
 
 // Faz o upload de fotos e salva os caminhos no banco
 const uploadFotos = async (req, res) => {
-  const { os_id } = req.body; // Pega o ID da OS do corpo da requisição
+  const { os_id } = req.body;
+  const files = req.files;
 
-  if (!req.files || req.files.length === 0) {
-    return res.status(400).json({ error: 'Nenhuma foto foi enviada.' });
-  }
-  if (!os_id) {
-    return res.status(400).json({ error: 'O ID da Ordem de Serviço (os_id) é obrigatório.' });
+  if (!files || files.length === 0) {
+    return res.status(400).json({ error: 'Nenhuma foto enviada.' });
   }
 
   try {
     const fotosSalvas = [];
-    for (const file of req.files) {
-      const caminho_arquivo = file.path; // Caminho do arquivo salvo pelo Multer
-      const query = `
-        INSERT INTO checklist_foto (os_id, caminho_arquivo) 
-        VALUES ($1, $2) 
-        RETURNING *;
-      `;
-      const { rows } = await db.query(query, [os_id, caminho_arquivo]);
+    for (const file of files) {
+      // Gera um nome de arquivo único
+      const randomName = crypto.randomBytes(16).toString('hex');
+      const fileName = `<span class="math-inline">\{randomName\}\-</span>{file.originalname}`;
+
+      // Prepara o comando de upload para o S3
+      const command = new PutObjectCommand({
+        Bucket: process.env.AWS_BUCKET_NAME,
+        Key: fileName,
+        Body: file.buffer,
+        ContentType: file.mimetype,
+      });
+
+      await s3.send(command);
+
+      // Constrói a URL pública do arquivo
+      const fileUrl = `https://<span class="math-inline">\{process\.env\.AWS\_BUCKET\_NAME\}\.s3\.</span>{process.env.AWS_REGION}.amazonaws.com/${fileName}`;
+
+      // Salva a URL pública no banco de dados
+      const query = 'INSERT INTO checklist_foto (os_id, caminho_arquivo) VALUES ($1, $2) RETURNING *;';
+      const { rows } = await db.query(query, [os_id, fileUrl]);
       fotosSalvas.push(rows[0]);
     }
     res.status(201).json({ message: 'Fotos enviadas com sucesso!', data: fotosSalvas });
   } catch (error) {
-    console.error('Erro ao fazer upload de fotos:', error);
+    console.error('Erro ao fazer upload para o S3:', error);
     res.status(500).json({ error: 'Erro interno do servidor ao salvar fotos.' });
   }
 };

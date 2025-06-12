@@ -64,43 +64,25 @@ const getOrdemServicoById = async (req, res) => {
   const { id } = req.params;
 
   try {
-    // 1. Busca os dados da OS
+    // Busca os dados principais da OS
     const osResult = await db.query('SELECT * FROM ordem_servico WHERE id = $1', [id]);
     if (osResult.rows.length === 0) {
       return res.status(404).json({ error: 'Ordem de serviço não encontrada.' });
     }
     const ordemServico = osResult.rows[0];
 
-    // 2. Busca as respostas do checklist associadas
+    // Busca as respostas do checklist
     const respostasResult = await db.query('SELECT * FROM checklist_resposta WHERE os_id = $1', [id]);
+    
+    // CORREÇÃO: A LINHA ABAIXO PROVAVELMENTE ESTAVA FALTANDO OU COM ERRO
+    const fotosResult = await db.query('SELECT * FROM checklist_foto WHERE os_id = $1', [id]);
+
+    // Adiciona as respostas e fotos ao objeto principal
     ordemServico.respostas = respostasResult.rows;
-
-    // 3. Busca as fotos associadas
-    if (fotosResult.rows.length > 0) {
-      doc.addPage();
-      doc.fontSize(14).text('Fotos Anexadas', { underline: true });
-      doc.moveDown();
-
-      ordemServico.fotos = fotosResult.rows;
-
-      // O loop agora é assíncrono para baixar as imagens
-      for (const foto of fotosResult.rows) {
-        try {
-          // Baixa a imagem da URL do S3 como um buffer
-          const response = await axios.get(foto.caminho_arquivo, { responseType: 'arraybuffer' });
-          const imageBuffer = Buffer.from(response.data, 'binary');
-
-          doc.image(imageBuffer, { width: 400, align: 'center' });
-          doc.moveDown();
-        } catch (imgError) {
-          console.error(`Não foi possível carregar a imagem ${foto.caminho_arquivo}:`, imgError);
-          doc.fillColor('red').text(`[Imagem não pôde ser carregada: ${foto.id}]`, { align: 'center' });
-          doc.moveDown();
-        }
-      }
-    }
+    ordemServico.fotos = fotosResult.rows; // Agora a variável 'fotosResult' existe
 
     res.status(200).json(ordemServico);
+    
   } catch (error) {
     console.error(`Erro ao buscar ordem de serviço ${id}:`, error);
     res.status(500).json({ error: 'Erro interno do servidor' });

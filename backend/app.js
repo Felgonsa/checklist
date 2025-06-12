@@ -13,6 +13,8 @@ app.use(cors());
 app.use(express.json());
 app.use('/api/checklist', checklistRoutes);
 
-app.listen(3001, () => {
-  console.log('Servidor rodando na porta 3001');
+// Substitua a linha 'app.listen(3001, ...)' por isto:
+const PORT = process.env.PORT || 3001;
+app.listen(PORT, () => {
+  console.log(`Servidor rodando na porta ${PORT}`);
 });

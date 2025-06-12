@@ -1,10 +1,12 @@
 import axios from 'axios';
 
 // Defina o endereço do seu backend aqui
-export const API_BASE_URL = 'http://:3001'; // Lembre-se de usar o seu IP local
+const BACKEND_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
+
+export const API_BASE_URL = BACKEND_URL;
 
 const api = axios.create({
-  baseURL: `${API_BASE_URL}/api/checklist`,
+  baseURL: `${BACKEND_URL}/api/checklist`,
 });
 
 // --- Funções para interagir com a API ---

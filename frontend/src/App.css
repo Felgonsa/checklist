@@ -1,0 +1,521 @@
+/* =================================================================== */
+/* CSS ESTRUTURADO E COMENTADO PARA A APLICAÇÃO CHECKLIST            */
+/* =================================================================== */
+
+/* --- ESTILOS GERAIS E LAYOUT BASE --- */
+/* Define fontes, cores e fundo padrão para toda a aplicação. */
+
+:root {
+  /* Definindo variáveis de cor para fácil manutenção */
+  --cor-principal: #007bff;
+  --cor-secundaria: #6c757d;
+  --cor-sucesso: #28a745;
+  --cor-perigo: #dc3545;
+  --cor-info: #17a2b8;
+  --cor-fundo: #f8f9fa;
+  --cor-texto: #212529;
+  --cor-header: #000000;
+  --cor-borda: #dee2e6;
+  --cor-card: white;
+}
+
+body {
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
+  background-color: var(--cor-fundo);
+  color: var(--cor-texto);
+}
+
+.App {
+  text-align: center;
+}
+
+.app-header {
+  background-color: var(--cor-header);
+  padding: 10px;
+  color: white;
+  margin-bottom: 2rem;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.img-header {
+  width: 100%;
+  max-width: 50px;
+  margin: 0 auto;
+}
+
+.app-main {
+  padding: 0 1rem;
+  max-width: 900px;
+  margin: 0 auto;
+}
+
+/* --- ESTILOS DE BOTÕES GLOBAIS --- */
+/* Estilos base para os botões principais de ação. */
+
+.btn-save, .btn-pdf, .btn-signature, .btn-new-checklist {
+  padding: 10px 20px;
+  border: none;
+  border-radius: 6px;
+  font-size: 16px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s, transform 0.1s;
+}
+
+.btn-save:hover, .btn-pdf:hover, .btn-signature:hover, .btn-new-checklist:hover {
+  transform: translateY(-1px);
+}
+
+.btn-save:disabled {
+  background-color: #aaa;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* Cores específicas dos botões */
+.btn-new-checklist { background-color: var(--cor-principal); color: white; }
+.btn-save { background-color: var(--cor-sucesso); color: white; }
+.btn-pdf { background-color: var(--cor-perigo); color: white; }
+.btn-signature { background-color: var(--cor-info); color: white; }
+
+
+/* --- PÁGINA INICIAL (HomePage) --- */
+/* Estilos para a lista de Ordens de Serviço. */
+
+.homepage h2 {
+  color: var(--cor-header);
+  margin-bottom: 1.5rem;
+}
+
+.os-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.os-card {
+  background-color: var(--cor-card);
+  border: 1px solid var(--cor-borda);
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+  transition: transform 0.2s, box-shadow 0.2s;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem;
+}
+
+.os-card-link {
+  text-decoration: none;
+  color: inherit;
+  flex-grow: 1;
+  text-align: left;
+}
+
+.os-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+
+.os-card h3 {
+  margin: 0 0 0.5rem 0;
+  color: var(--cor-principal);
+}
+
+.os-card p {
+  margin: 0.25rem 0;
+}
+
+.os-date {
+  font-size: 0.85rem;
+  color: var(--cor-secundaria);
+  margin-top: 0.5rem;
+}
+
+.delete-os-btn {
+  background-color: transparent;
+  color: var(--cor-perigo);
+  border: 1px solid var(--cor-perigo);
+  padding: 5px 12px;
+  border-radius: 5px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s, color 0.2s;
+  margin-left: 1rem;
+}
+
+.delete-os-btn:hover {
+  background-color: var(--cor-perigo);
+  color: white;
+}
+
+
+/* --- PÁGINA DO CHECKLIST (ChecklistPage) --- */
+
+.checklist-page {
+  text-align: left;
+}
+
+/* Cabeçalho com detalhes da OS */
+.os-details {
+  background-color: var(--cor-card);
+  border: 1px solid var(--cor-borda);
+  padding: 1.5rem;
+  border-radius: 8px;
+  margin-bottom: 2rem;
+}
+
+.os-details h2 {
+  margin: 0;
+  color: var(--cor-texto);
+}
+
+/* Link para voltar */
+.back-link {
+  display: inline-block;
+  margin-bottom: 1.5rem;
+  color: var(--cor-principal);
+  text-decoration: none;
+  font-weight: bold;
+}
+
+.back-link:hover {
+  text-decoration: underline;
+}
+
+/* Container do formulário */
+.checklist-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem; /* Espaço entre os cards de item */
+}
+
+/* Card de cada item do checklist */
+.checklist-item {
+  background-color: var(--cor-card);
+  padding: 1rem 1.5rem;
+  border-radius: 8px;
+  border: 1px solid var(--cor-borda);
+}
+
+/* Layout do cabeçalho de cada item (título + opções) */
+.item-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap; /* Permite quebrar linha em telas pequenas */
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.item-name {
+  font-weight: 600;
+  font-size: 1.1rem;
+  color: #334155;
+}
+
+/* Botões de Opção Customizados (Status) */
+.status-options {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.status-options input[type="radio"] {
+  opacity: 0;
+  position: fixed;
+  width: 0;
+}
+
+.status-options label span {
+  display: inline-block;
+  padding: 6px 14px;
+  border-radius: 20px;
+  border: 1px solid var(--cor-borda);
+  color: var(--cor-secundaria);
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+/* Estilo do botão quando HOVER */
+.status-options label:hover span {
+  border-color: var(--cor-texto);
+  color: var(--cor-texto);
+}
+
+/* Estilo do botão quando SELECIONADO (sem cores específicas) */
+.status-options input[type="radio"]:checked + span {
+  background-color: var(--cor-header);
+  color: white;
+  border-color: var(--cor-header);
+}
+
+/* Campos de Texto e Observações */
+.checklist-item textarea,
+.checklist-item .text-input {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 0.75rem;
+  border: 1px solid var(--cor-borda);
+  border-radius: 6px;
+  font-family: inherit;
+  font-size: 1rem;
+  min-height: 45px;
+  margin-top: 0.5rem;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.checklist-item textarea:focus,
+.checklist-item .text-input:focus {
+  outline: none;
+  border-color: var(--cor-principal);
+  box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25);
+}
+
+
+/* --- GALERIA DE FOTOS --- */
+
+.photos-section {
+  margin-top: 2rem;
+  padding-top: 2rem;
+  border-top: 1px solid var(--cor-borda);
+}
+
+.photo-gallery {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 1rem;
+  margin-bottom: 2rem;
+}
+
+.photo-container {
+  display: grid; 
+  place-items: center;
+  overflow: hidden;
+  border-radius: 8px;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+  aspect-ratio: 1 / 1; 
+  position: relative;
+}
+
+.photo-container > * {
+  grid-area: 1 / 1;
+}
+
+.photo-container img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain; /* Usando 'contain' como definido anteriormente */
+  display: block;
+}
+
+.delete-photo-btn {
+  place-self: start end;
+  margin: 8px;
+  z-index: 2;
+  background-color: rgba(200, 50, 50, 0.7);
+  color: white;
+  border: none;
+  border-radius: 50%;
+  width: 25px;
+  height: 25px;
+  font-size: 16px;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.delete-photo-btn:hover {
+  background-color: rgba(200, 50, 50, 1);
+}
+
+.upload-form {
+  background-color: #e9ecef;
+  padding: 1.5rem;
+  border-radius: 8px;
+  border: 1px solid var(--cor-borda);
+}
+
+
+/* --- BOTÕES DE AÇÃO (Salvar, PDF, Assinatura) --- */
+
+.checklist-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin-top: 2rem;
+  margin-bottom: 5rem;
+  padding-top: 2rem;
+  border-top: 1px solid var(--cor-borda);
+}
+
+
+/* --- MODAL (Novo Checklist e Assinatura) --- */
+
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.6);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+  padding: 1rem;
+}
+
+.modal-content {
+  background-color: white;
+  padding: 2rem;
+  border-radius: 8px;
+  width: 100%;
+  max-width: 500px;
+  box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+}
+
+.modal-content h2 {
+  margin-top: 0;
+  color: var(--cor-header);
+}
+
+.form-group {
+  margin-bottom: 1rem;
+  text-align: left;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 0.5rem;
+  font-weight: 500;
+}
+
+.form-group input {
+  width: 100%;
+  padding: 0.75rem;
+  box-sizing: border-box;
+  border: 1px solid var(--cor-borda);
+  border-radius: 6px;
+}
+
+.error-message {
+  color: var(--cor-perigo);
+  margin-bottom: 1rem;
+}
+
+.modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 1rem;
+  margin-top: 2rem;
+  border-top: none; /* Remove a borda duplicada aqui */
+  padding-top: 0;
+}
+
+.modal-actions .btn-secondary {
+  background-color: var(--cor-secundaria);
+}
+
+/* ======================================================= */
+/* ESTILOS PARA O SLIDER DE COMBUSTÍVEL                    */
+/* ======================================================= */
+
+.range-slider-container {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-top: 0.5rem;
+}
+
+.range-slider {
+  -webkit-appearance: none; /* Remove o estilo padrão */
+  appearance: none;
+  width: 100%; /* Ocupa todo o espaço disponível */
+  height: 8px;
+  background: #e9ecef; /* Cor do trilho do slider */
+  border-radius: 5px;
+  outline: none;
+  opacity: 0.9;
+  transition: opacity .2s;
+}
+
+.range-slider:hover {
+  opacity: 1;
+}
+
+/* Estilo do "pino" de arrastar para Chrome/Safari */
+.range-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 20px;
+  height: 20px;
+  background: var(--cor-principal); /* Usa a cor azul principal */
+  border-radius: 50%;
+  cursor: pointer;
+  border: 2px solid white;
+  box-shadow: 0 0 5px rgba(0,0,0,0.2);
+}
+
+/* Estilo do "pino" de arrastar para Firefox */
+.range-slider::-moz-range-thumb {
+  width: 20px;
+  height: 20px;
+  background: var(--cor-principal);
+  border-radius: 50%;
+  cursor: pointer;
+  border: 2px solid white;
+  box-shadow: 0 0 5px rgba(0,0,0,0.2);
+}
+
+.range-slider-value {
+  font-weight: 600;
+  color: var(--cor-principal);
+  min-width: 50px; /* Garante que o texto não "pule" */
+  text-align: right;
+}
+
+/* Estilos para a barra de busca */
+.search-bar-container {
+  margin-bottom: 2rem;
+  text-align: left;
+}
+
+.search-input {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  font-size: 1rem;
+  border-radius: 6px;
+  border: 1px solid var(--cor-borda);
+  box-sizing: border-box;
+}
+
+.search-input:focus {
+  outline: none;
+  border-color: var(--cor-principal);
+  box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.25);
+}
+
+.os-card-actions {
+  display: flex;
+  gap: 0.5rem;
+  margin-left: 1rem;
+}
+
+.edit-os-btn {
+  background-color: transparent;
+  color: #ffc107; /* Amarelo */
+  border: 1px solid #ffc107;
+  
+}
+
+.edit-os-btn:hover {
+  background-color: #ffc107;
+  color: black;
+}

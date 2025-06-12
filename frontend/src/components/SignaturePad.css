@@ -1,0 +1,12 @@
+.signature-modal {
+  width: 95%;
+  max-width: 600px;
+}
+.signature-canvas-container {
+  border: 1px dashed #ccc;
+  border-radius: 8px;
+}
+.signature-canvas {
+  width: 100%;
+  height: 200px;
+}

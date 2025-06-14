@@ -93,14 +93,14 @@ const ChecklistPage = () => {
 
   const handlePhotoUpload = async () => {
     if (!selectedFiles || selectedFiles.length === 0) {
-      alert('Por favor, selecione ao menos um arquivo.');
+      alert("Por favor, selecione ao menos um arquivo.");
       return;
     }
     setUploading(true);
     const formData = new FormData();
-    formData.append('os_id', id);
+    formData.append("os_id", id);
     for (let i = 0; i < selectedFiles.length; i++) {
-      formData.append('fotos', selectedFiles[i]);
+      formData.append("fotos", selectedFiles[i]);
     }
     try {
       const response = await uploadFotos(formData);
@@ -109,18 +109,18 @@ const ChecklistPage = () => {
         fotos: [...prevData.fotos, ...response.data.data],
       }));
       setSelectedFiles(null);
-      document.getElementById('file-input').value = null;
-      alert('Fotos enviadas com sucesso!');
+      document.getElementById("file-input").value = null;
+      alert("Fotos enviadas com sucesso!");
     } catch (err) {
-      alert('Erro ao enviar fotos.');
+      alert("Erro ao enviar fotos.");
       console.error(err);
     } finally {
       setUploading(false);
     }
   };
-  
+
   const handlePhotoDelete = async (fotoId) => {
-    if (!window.confirm('Tem certeza que deseja deletar esta foto?')) {
+    if (!window.confirm("Tem certeza que deseja deletar esta foto?")) {
       return;
     }
     try {
@@ -130,7 +130,7 @@ const ChecklistPage = () => {
         fotos: prevData.fotos.filter((foto) => foto.id !== fotoId),
       }));
     } catch (err) {
-      alert('Erro ao deletar foto.');
+      alert("Erro ao deletar foto.");
       console.error(err);
     }
   };
@@ -140,9 +140,9 @@ const ChecklistPage = () => {
       await saveAssinatura(id, signatureImage);
       setOsData((prev) => ({ ...prev, assinatura_cliente: signatureImage }));
       setIsSignatureModalOpen(false);
-      alert('Assinatura salva com sucesso!');
+      alert("Assinatura salva com sucesso!");
     } catch (err) {
-      alert('Erro ao salvar assinatura.');
+      alert("Erro ao salvar assinatura.");
       console.error(err);
     }
   };
@@ -161,7 +161,6 @@ const ChecklistPage = () => {
         ← Voltar para a lista
       </Link>
       <div className="os-details">
-        
         <h2>Checklist para: {osData.cliente_nome}</h2>
         <p>Veículo: {osData.veiculo_modelo}</p>
         <p>Placa: {osData.veiculo_placa}</p>
@@ -291,10 +290,7 @@ const ChecklistPage = () => {
           <div className="photo-gallery">
             {osData.fotos.map((foto) => (
               <div key={foto.id} className="photo-container">
-                <img
-                  src={`${API_BASE_URL}/${foto.caminho_arquivo}`}
-                  alt={`Foto ${foto.id}`}
-                />
+                <img src={foto.caminho_arquivo} alt={`Foto ${foto.id}`} />
                 <button
                   onClick={() => handlePhotoDelete(foto.id)}
                   className="delete-photo-btn"

@@ -238,35 +238,32 @@ const deleteOrdemServico = async (req, res) => {
 
 const deleteFoto = async (req, res) => {
   const { foto_id } = req.params;
-  const client = await db.pool.connect();
+
   try {
-    await client.query('BEGIN');
-
-    // Primeiro, busca o caminho do arquivo no banco para poder deletá-lo do disco
-    const resPath = await client.query('SELECT caminho_arquivo FROM checklist_foto WHERE id = $1', [foto_id]);
-    if (resPath.rows.length === 0) {
-      throw new Error('Foto não encontrada.');
+    // Primeiro, busca o caminho do arquivo (a URL do S3) no banco
+    const pathResult = await db.query('SELECT caminho_arquivo FROM checklist_foto WHERE id = $1', [foto_id]);
+    if (pathResult.rows.length === 0) {
+      return res.status(404).json({ error: 'Foto não encontrada no banco de dados.' });
     }
-    const caminho = resPath.rows[0].caminho_arquivo;
 
-    // Deleta o registro do banco de dados
-    await client.query('DELETE FROM checklist_foto WHERE id = $1', [foto_id]);
+    const fileUrl = pathResult.rows[0].caminho_arquivo;
+    // Extrai o nome do arquivo (a Key do S3) da URL completa
+    const fileName = fileUrl.substring(fileUrl.lastIndexOf('/') + 1);
 
-    // Deleta o arquivo físico do servidor
-    const fullPath = path.join(__dirname, '..', caminho);
-    fs.unlink(fullPath, (err) => {
-      if (err) console.error(`Erro ao deletar arquivo físico ${fullPath}:`, err);
-      else console.log(`Arquivo ${fullPath} deletado com sucesso.`);
+    // 1. Prepara e envia o comando de deleção para o S3
+    const command = new DeleteObjectCommand({
+      Bucket: process.env.AWS_BUCKET_NAME,
+      Key: fileName,
     });
+    await s3.send(command);
 
-    await client.query('COMMIT');
+    // 2. Se a deleção no S3 funcionou, deleta o registro do nosso banco de dados
+    await db.query('DELETE FROM checklist_foto WHERE id = $1', [foto_id]);
+
     res.status(200).json({ message: 'Foto deletada com sucesso.' });
   } catch (error) {
-    await client.query('ROLLBACK');
     console.error(`Erro ao deletar foto ${foto_id}:`, error);
-    res.status(500).json({ error: 'Erro interno do servidor.' });
-  } finally {
-    client.release();
+    res.status(500).json({ error: 'Erro interno do servidor ao deletar foto.' });
   }
 };
 

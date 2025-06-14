@@ -73,7 +73,7 @@ const getOrdemServicoById = async (req, res) => {
 
     // Busca as respostas do checklist
     const respostasResult = await db.query('SELECT * FROM checklist_resposta WHERE os_id = $1', [id]);
-    
+
     // CORREÇÃO: A LINHA ABAIXO PROVAVELMENTE ESTAVA FALTANDO OU COM ERRO
     const fotosResult = await db.query('SELECT * FROM checklist_foto WHERE os_id = $1', [id]);
 
@@ -82,7 +82,7 @@ const getOrdemServicoById = async (req, res) => {
     ordemServico.fotos = fotosResult.rows; // Agora a variável 'fotosResult' existe
 
     res.status(200).json(ordemServico);
-    
+
   } catch (error) {
     console.error(`Erro ao buscar ordem de serviço ${id}:`, error);
     res.status(500).json({ error: 'Erro interno do servidor' });
@@ -144,7 +144,7 @@ const uploadFotos = async (req, res) => {
     for (const file of files) {
       // Gera um nome de arquivo único
       const randomName = crypto.randomBytes(16).toString('hex');
-      const fileName = `<span class="math-inline">\{randomName\}\-</span>{file.originalname}`;
+      const fileName = `${randomName}-${file.originalname}`;
 
       // Prepara o comando de upload para o S3
       const command = new PutObjectCommand({
@@ -156,10 +156,10 @@ const uploadFotos = async (req, res) => {
 
       await s3.send(command);
 
-      // Constrói a URL pública do arquivo
+      // Constrói a URL pública do arquivo usando crases (`)
       const fileUrl = `https://<span class="math-inline">\{process\.env\.AWS\_BUCKET\_NAME\}\.s3\.</span>{process.env.AWS_REGION}.amazonaws.com/${fileName}`;
 
-      // Salva a URL pública no banco de dados
+      // Salva a URL pública e correta no banco de dados
       const query = 'INSERT INTO checklist_foto (os_id, caminho_arquivo) VALUES ($1, $2) RETURNING *;';
       const { rows } = await db.query(query, [os_id, fileUrl]);
       fotosSalvas.push(rows[0]);

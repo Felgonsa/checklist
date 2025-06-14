@@ -142,11 +142,9 @@ const uploadFotos = async (req, res) => {
   try {
     const fotosSalvas = [];
     for (const file of files) {
-      // Gera um nome de arquivo único
       const randomName = crypto.randomBytes(16).toString('hex');
-      const fileName = `${randomName}-${file.originalname}`;
+      const fileName = `<span class="math-inline">\{randomName\}\-</span>{file.originalname}`;
 
-      // Prepara o comando de upload para o S3
       const command = new PutObjectCommand({
         Bucket: process.env.AWS_BUCKET_NAME,
         Key: fileName,
@@ -156,8 +154,8 @@ const uploadFotos = async (req, res) => {
 
       await s3.send(command);
 
-      // Constrói a URL pública do arquivo usando crases (`)
-      const fileUrl = `https://<span class="math-inline">\{process\.env\.AWS\_BUCKET\_NAME\}\.s3\.</span>{process.env.AWS_REGION}.amazonaws.com/${fileName}`;
+      // A CORREÇÃO ESTÁ AQUI: Esta linha deve ser uma string limpa, usando crases (`)
+      const fileUrl = `https://${process.env.AWS_BUCKET_NAME}.s3.${process.env.AWS_REGION}.amazonaws.com/${fileName}`;
 
       // Salva a URL pública e correta no banco de dados
       const query = 'INSERT INTO checklist_foto (os_id, caminho_arquivo) VALUES ($1, $2) RETURNING *;';

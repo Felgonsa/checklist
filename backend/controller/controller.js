@@ -3,9 +3,10 @@ const db = require('../db/db.js');
 const fs = require('fs'); // Importe o módulo 'fs' no topo do arquivo
 const path = require('path'); // Importe o módulo 'path' também
 const PDFDocument = require('pdfkit');
-const { S3Client, PutObjectCommand } = require("@aws-sdk/client-s3");
+const { S3Client, PutObjectCommand, DeleteObjectCommand } = require("@aws-sdk/client-s3");
 const crypto = require('crypto'); // Módulo nativo do Node.js
 const axios = require('axios');
+
 
 // --- Controller para Itens Padrão do Checklist ---
 

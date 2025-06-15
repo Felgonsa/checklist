@@ -143,7 +143,7 @@ const uploadFotos = async (req, res) => {
     const fotosSalvas = [];
     // O loop 'for' processa um arquivo de cada vez
     for (const file of files) {
-      
+
       // =======================================================
       // CORREÇÃO: Estas linhas DEVEM estar DENTRO do loop
       // para gerar um nome único para CADA arquivo.
@@ -315,24 +315,36 @@ const generatePdf = async (req, res) => {
   const { id } = req.params;
   try {
     // 1. Buscar todos os dados (OS, itens do checklist, respostas e fotos)
-    const osResult = await db.query('SELECT * FROM ordem_servico WHERE id = $1', [id]);
-    if (osResult.rows.length === 0) {
-      return res.status(404).json({ error: 'Ordem de serviço não encontrada.' });
-    }
     const osData = osResult.rows[0];
     const itensResult = await db.query('SELECT * FROM checklist_item ORDER BY ordem');
     const respostasResult = await db.query('SELECT * FROM checklist_resposta WHERE os_id = $1', [id]);
     const fotosResult = await db.query('SELECT * FROM checklist_foto WHERE os_id = $1', [id]);
-
     const respostasMap = new Map(respostasResult.rows.map(r => [r.item_id, r]));
 
-    // 2. Configurar o cabeçalho da resposta para indicar que é um PDF
+    // --- ETAPA 2: BAIXAR TODAS AS IMAGENS DO S3 PRIMEIRO ---
+    const imageBuffers = [];
+    if (fotosResult.rows.length > 0) {
+      const downloadPromises = fotosResult.rows.map(foto =>
+        axios.get(foto.caminho_arquivo, { responseType: 'arraybuffer' })
+          .then(response => Buffer.from(response.data, 'binary'))
+          .catch(err => {
+            console.error(`[PDF Gen] FALHA ao baixar imagem: ${foto.caminho_arquivo}`, err.message);
+            return null; // Retorna nulo para downloads que falharam para não quebrar tudo
+          })
+      );
+      const resolvedBuffers = await Promise.all(downloadPromises);
+      resolvedBuffers.forEach(buffer => {
+        if (buffer) imageBuffers.push(buffer); // Adiciona apenas os buffers que foram baixados com sucesso
+      });
+    }
+
+    // --- ETAPA 3: MONTAR O PDF COM TODOS OS DADOS EM MÃOS ---
     res.setHeader('Content-Type', 'application/pdf');
     res.setHeader('Content-Disposition', `inline; filename="checklist-OS-${id}.pdf"`);
 
-    // 3. Criar o documento PDF
     const doc = new PDFDocument({ margin: 50, size: 'A4' });
-    doc.pipe(res); // Envia o PDF diretamente para a resposta, sem salvar no servidor
+    doc.pipe(res);
+
 
     // 4. Adicionar conteúdo ao PDF
     // Cabeçalho

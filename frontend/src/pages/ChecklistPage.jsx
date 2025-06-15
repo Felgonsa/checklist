@@ -148,9 +148,17 @@ const ChecklistPage = () => {
   };
 
   const handleGeneratePdf = () => {
-    const pdfUrl = `${API_BASE_URL}/api/checklist/ordem-servico/${id}/pdf`;
-    window.open(pdfUrl, "_blank");
-  };
+  // 1. Gera um número único baseado na data e hora atuais.
+  const cacheBuster = `?t=${Date.now()}`;
+
+  // 2. Adiciona esse número no final da URL.
+  const pdfUrl = `${API_BASE_URL}/api/checklist/ordem-servico/${id}/pdf${cacheBuster}`;
+
+  console.log("Abrindo URL do PDF com cache buster:", pdfUrl);
+
+  // 3. Abre a nova URL, que o navegador sempre verá como única.
+  window.open(pdfUrl, "_blank");
+};
 
   if (loading) return <p>Carregando checklist...</p>;
   if (error) return <p style={{ color: "red" }}>{error}</p>;

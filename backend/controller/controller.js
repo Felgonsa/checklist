@@ -378,7 +378,9 @@ const generatePdf = async (req, res) => {
     doc.text(`Cliente: ${osData.cliente_nome}`);
     doc.text(`Veículo: ${osData.veiculo_modelo}`);
     doc.text(`Placa: ${osData.veiculo_placa}`);
-    doc.text(`Data da Vistoria: ${new Date(osData.data).toLocaleString('pt-BR')}`);
+    doc.text(`Data da Vistoria: ${new Date(osData.data).toLocaleString('pt-BR', {
+      timeZone: 'America/Campo_Grande'
+    })}`);
     if (osData.seguradora_nome) {
       doc.text(`Seguradora: ${osData.seguradora_nome}`);
     }

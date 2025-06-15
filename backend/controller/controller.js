@@ -141,23 +141,30 @@ const uploadFotos = async (req, res) => {
 
   try {
     const fotosSalvas = [];
+    // O loop 'for' processa um arquivo de cada vez
     for (const file of files) {
+      
+      // =======================================================
+      // CORREÇÃO: Estas linhas DEVEM estar DENTRO do loop
+      // para gerar um nome único para CADA arquivo.
+      // =======================================================
       const randomName = crypto.randomBytes(16).toString('hex');
-      const fileName = `<span class="math-inline">\{randomName\}\-</span>{file.originalname}`;
+      const fileName = `${randomName}-${file.originalname}`;
 
+      // Prepara o comando de upload para o S3
       const command = new PutObjectCommand({
         Bucket: process.env.AWS_BUCKET_NAME,
-        Key: fileName,
+        Key: fileName, // Usa o nome único gerado
         Body: file.buffer,
         ContentType: file.mimetype,
       });
 
       await s3.send(command);
 
-      // A CORREÇÃO ESTÁ AQUI: Esta linha deve ser uma string limpa, usando crases (`)
+      // Constrói a URL pública usando o nome único gerado
       const fileUrl = `https://${process.env.AWS_BUCKET_NAME}.s3.${process.env.AWS_REGION}.amazonaws.com/${fileName}`;
 
-      // Salva a URL pública e correta no banco de dados
+      // Salva a URL única e correta no banco de dados
       const query = 'INSERT INTO checklist_foto (os_id, caminho_arquivo) VALUES ($1, $2) RETURNING *;';
       const { rows } = await db.query(query, [os_id, fileUrl]);
       fotosSalvas.push(rows[0]);

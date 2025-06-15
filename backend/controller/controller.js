@@ -327,16 +327,19 @@ const generatePdf = async (req, res) => {
 
     // --- ETAPA 2: BAIXAR TODAS AS IMAGENS DO S3 PRIMEIRO ---
     const imageBuffers = [];
+
     if (fotosResult.rows.length > 0) {
       const downloadPromises = fotosResult.rows.map(foto =>
         axios.get(foto.caminho_arquivo, { responseType: 'arraybuffer' })
           .then(response => Buffer.from(response.data, 'binary'))
           .catch(err => {
             console.error(`[PDF Gen] FALHA ao baixar imagem: ${foto.caminho_arquivo}`, err.message);
-            return null; // Retorna nulo para downloads que falharam para não quebrar tudo
+            return null; // Retorna nulo para downloads que falharam
           })
       );
+
       const resolvedBuffers = await Promise.all(downloadPromises);
+
       resolvedBuffers.forEach(buffer => {
         if (buffer) imageBuffers.push(buffer); // Adiciona apenas os buffers que foram baixados com sucesso
       });
@@ -447,52 +450,44 @@ const generatePdf = async (req, res) => {
 
 
     // Fotos (se houver)
-    if (fotosResult.rows.length > 0) {
+    if (imageBuffers.length > 0) {
       doc.addPage();
       doc.fontSize(14).text('Fotos Anexadas', { underline: true });
       doc.moveDown();
 
-      // --- Lógica para o Grid de 2 Colunas ---
-
-      // Parâmetros do Grid (você pode ajustar esses valores)
+      // Parâmetros do Grid
       const margin = 50;
       const page_width = doc.page.width - margin * 2;
-      const gap = 20; // Espaço entre as fotos
+      const gap = 20;
       const image_width = (page_width - gap) / 2;
-      const image_height = 180; // Altura máxima de cada foto
+      const image_height = 180;
       const x_col1 = margin;
       const x_col2 = margin + image_width + gap;
-
       let current_y = doc.y;
 
-      for (let i = 0; i < fotosResult.rows.length; i++) {
-        const foto = fotosResult.rows[i];
-        const imagePath = path.join(__dirname, '..', foto.caminho_arquivo);
+      // Este loop agora usa os 'buffers' que já baixamos, em vez de caminhos de arquivo
+      for (let i = 0; i < imageBuffers.length; i++) {
+        const imageBuffer = imageBuffers[i];
 
-        if (fs.existsSync(imagePath)) {
-          // Verifica se a próxima linha de fotos caberá na página atual
-          if (current_y + image_height > doc.page.height - margin) {
-            doc.addPage();
-            current_y = doc.page.margins.top;
-          }
+        if (current_y + image_height > doc.page.height - margin) {
+          doc.addPage();
+          current_y = doc.page.margins.top;
+        }
 
-          // Define a posição X baseado se o item é par ou ímpar
-          const x_position = (i % 2 === 0) ? x_col1 : x_col2;
+        const x_position = (i % 2 === 0) ? x_col1 : x_col2;
 
-          // Desenha a imagem na posição calculada
-          doc.image(imagePath, x_position, current_y, {
-            fit: [image_width, image_height], // Garante que a imagem caiba na célula
-            align: 'center',
-            valign: 'center'
-          });
+        doc.image(imageBuffer, x_position, current_y, {
+          fit: [image_width, image_height],
+          align: 'center',
+          valign: 'center'
+        });
 
-          // Se for o segundo item da linha, ou o último item da lista, move o cursor Y para a próxima linha
-          if (i % 2 !== 0 || i === fotosResult.rows.length - 1) {
-            current_y += image_height + gap;
-          }
+        if (i % 2 !== 0 || i === imageBuffers.length - 1) {
+          current_y += image_height + gap;
         }
       }
     }
+
     if (osData.assinatura_cliente) {
       // Se o conteúdo já estiver no final da página, cria uma nova página para a assinatura
       if (doc.y > 600) {

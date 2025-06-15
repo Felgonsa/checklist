@@ -314,7 +314,11 @@ const generatePdf = async (req, res) => {
 
   const { id } = req.params;
   try {
-    // 1. Buscar todos os dados (OS, itens do checklist, respostas e fotos)
+    // --- ETAPA 1: BUSCAR TODOS OS DADOS DO BANCO ---
+    const osResult = await db.query('SELECT * FROM ordem_servico WHERE id = $1', [id]);
+    if (osResult.rows.length === 0) {
+      return res.status(404).json({ error: 'Ordem de serviço não encontrada.' });
+    }
     const osData = osResult.rows[0];
     const itensResult = await db.query('SELECT * FROM checklist_item ORDER BY ordem');
     const respostasResult = await db.query('SELECT * FROM checklist_resposta WHERE os_id = $1', [id]);
@@ -344,7 +348,6 @@ const generatePdf = async (req, res) => {
 
     const doc = new PDFDocument({ margin: 50, size: 'A4' });
     doc.pipe(res);
-
 
     // 4. Adicionar conteúdo ao PDF
     // Cabeçalho

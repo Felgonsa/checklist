@@ -100,9 +100,11 @@ const generatePdf = async (req, res) => {
     // Define os cabeçalhos da resposta HTTP para indicar que o conteúdo é um PDF.
     // 'Content-Type': Diz ao navegador que o tipo de arquivo é um PDF.
     res.setHeader('Content-Type', 'application/pdf');
-    // 'Content-Disposition': Sugere ao navegador exibir o PDF inline (no próprio navegador)
+    // 'Content-Disposition': Sugere ao navegador exibir o PDF attachment (download do arquivo)
     // e fornece um nome de arquivo padrão para download.
-    res.setHeader('Content-Disposition', `inline; filename="checklist-OS-${id}.pdf"`);
+    // res.setHeader('Content-Disposition', `attachment; filename="checklist-OS-${id}.pdf"`);
+    res.setHeader('Content-Disposition', `attachment; filename="checklist-OS-${osData.veiculo_placa}.pdf"`);
+
 
     // Cria uma nova instância do documento PDF.
     // 'margin': Define as margens padrão do documento (50 unidades de espaço de cada lado).

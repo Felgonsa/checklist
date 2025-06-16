@@ -9,7 +9,7 @@ const mediaController = require('../controller/mediaController.js');
 const pdfController = require('../controller/pdfController.js');
 
 
-ro// === ROTAS DE ORDEM DE SERVIÇO ===
+// === ROTAS DE ORDEM DE SERVIÇO ===
 router.get('/ordens-servico', ordemServicoController.getOrdensServico);
 router.get('/ordem-servico/:id', ordemServicoController.getOrdemServicoById);
 router.post('/ordem-servico', ordemServicoController.createOrdemServico);

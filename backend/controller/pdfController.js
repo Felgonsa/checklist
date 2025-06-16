@@ -103,7 +103,7 @@ const generatePdf = async (req, res) => {
     // 'Content-Disposition': Sugere ao navegador exibir o PDF attachment (download do arquivo)
     // e fornece um nome de arquivo padrão para download.
     // res.setHeader('Content-Disposition', `attachment; filename="checklist-OS-${id}.pdf"`);
-    res.setHeader('Content-Disposition', `attachment; filename="checklist-OS-${osData.veiculo_placa}.pdf"`);
+    res.setHeader('Content-Disposition', `attachment; filename="checklist-${osData.veiculo_modelo}-${osData.veiculo_placa}.pdf"`);
 
 
     // Cria uma nova instância do documento PDF.

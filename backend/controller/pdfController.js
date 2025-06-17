@@ -2,8 +2,6 @@
 // Este módulo é responsável por configurar e gerenciar a conexão com o banco de dados.
 const db = require('../db/db.js');
 
-const logo = require('../pdf/header.png')
-
 // Importa o módulo 'fs' (File System) nativo do Node.js.
 // Ele é usado para interagir com o sistema de arquivos, como verificar a existência de um arquivo.
 const fs = require('fs');
@@ -128,6 +126,7 @@ const generatePdf = async (req, res) => {
       doc.image('header.png', 0,0, {
         width: (doc.page.width)
       });
+      doc.y = 150;
     }
 
     // Adiciona o título principal do documento.

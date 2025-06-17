@@ -2,6 +2,8 @@
 // Este módulo é responsável por configurar e gerenciar a conexão com o banco de dados.
 const db = require('../db/db.js');
 
+const logo = require('../pdf/header.png')
+
 // Importa o módulo 'fs' (File System) nativo do Node.js.
 // Ele é usado para interagir com o sistema de arquivos, como verificar a existência de um arquivo.
 const fs = require('fs');
@@ -14,6 +16,7 @@ const PDFDocument = require('pdfkit');
 // É um cliente HTTP baseado em Promises para fazer requisições a recursos externos,
 // como baixar imagens de URLs (por exemplo, de um serviço de armazenamento como o S3).
 const axios = require('axios');
+const { log } = require('console');
 
 // ---
 
@@ -120,14 +123,10 @@ const generatePdf = async (req, res) => {
 
     // --- Cabeçalho do Documento ---
 
-    // Verifica se o arquivo 'logo.png' existe na pasta raiz do backend.
-    // Esta verificação evita erros se a logo não estiver presente.
-    if (fs.existsSync('logo.png')) {
-      // Adiciona a imagem 'logo.png' ao documento.
-      // 'width': Ajusta a largura da imagem. A altura será ajustada proporcionalmente.
-      doc.image('logo.png', {
-        width: 50,
-        // align: 'center' // Comentado, mas pode ser usado para alinhar a imagem.
+    
+    if (fs.existsSync('header.png')) {
+      doc.image('header.png', 0,0, {
+        width: (doc.page.width)
       });
     }
 

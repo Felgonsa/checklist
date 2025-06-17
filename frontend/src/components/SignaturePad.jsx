@@ -1,25 +1,39 @@
-import React, { useRef } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import SignatureCanvas from 'react-signature-canvas';
-import './SignaturePad.css'; // Criaremos este arquivo de estilo
+import './SignaturePad.css';
 
 const SignaturePad = ({ onSave, onClose }) => {
   const sigCanvas = useRef({});
+  // NOVO: Estado para guardar os dados da assinatura enquanto o usuário desenha
+  const [signatureData, setSignatureData] = useState(null);
+
+  // NOVO: Efeito para restaurar o desenho se o componente for recriado
+  useEffect(() => {
+    // Se já temos um desenho salvo no estado, e o canvas está pronto...
+    if (sigCanvas.current && signatureData) {
+      // ...nós o carregamos de volta na tela.
+      sigCanvas.current.fromDataURL(signatureData);
+    }
+  }, [signatureData]); // Não precisa de mais dependências
+
+  // NOVO: Função que salva o estado da assinatura toda vez que o usuário termina um traço
+  const handleDrawEnd = () => {
+    setSignatureData(sigCanvas.current.toDataURL('image/png'));
+  };
 
   const clear = () => {
     sigCanvas.current.clear();
+    setSignatureData(null); // Limpa também o nosso estado salvo
   };
 
-  // Dentro de SignaturePad.jsx
-
-const save = () => {
+  const save = () => {
     if (sigCanvas.current.isEmpty()) {
       alert('Por favor, forneça uma assinatura.');
       return;
     }
-
-    const signatureImage = sigCanvas.current.getCanvas().toDataURL('image/png');
-    onSave(signatureImage);
-};
+    // Agora, em vez de gerar a imagem na hora, usamos a que já está salva no estado
+    onSave(signatureData);
+  };
 
   return (
     <div className="modal-overlay">
@@ -30,6 +44,7 @@ const save = () => {
             ref={sigCanvas}
             penColor="black"
             canvasProps={{ className: 'signature-canvas' }}
+            onEnd={handleDrawEnd} // NOVO: Chama a função para salvar após cada traço
           />
         </div>
         <div className="modal-actions">

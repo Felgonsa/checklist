@@ -18,8 +18,10 @@ const LoginPage = () => {
       const response = await login({ email, senha });
       // Guarda o token recebido no armazenamento local do navegador
       localStorage.setItem('authToken', response.data.token);
-      // Redireciona o usuário para a página principal após o login
-      navigate('/');
+      
+      
+      
+       window.location.href = '/home'; 
     } catch (err) {
       setError('E-mail ou senha inválidos. Tente novamente.');
       console.error('Erro de login:', err);

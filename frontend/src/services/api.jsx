@@ -16,6 +16,7 @@ export const API_BASE_URL = BACKEND_URL;
 // '${BACKEND_URL}/api/checklist' adicionado aos seus caminhos.
 const api = axios.create({
   baseURL: `${BACKEND_URL}/api/checklist`,
+
 });
 
 // --- Funções para Interagir com a API ---
@@ -37,6 +38,33 @@ api.interceptors.request.use(
     return Promise.reject(error);
   }
 );
+
+//intercepta as respostas da API para redirecionar o usuário para a página de login quando o token for inválido ou expirado
+api.interceptors.response.use(
+  // Se a resposta for SUCESSO (status 2xx), apenas a retorne
+  (response) => {
+    return response;
+  },
+  (error) => {
+    // ...e o erro for 403 (token inválido/expirado)...
+    if (error.response && error.response.status === 403) {
+      console.log("Token inválido ou expirado. Redirecionando para o login...");
+      // Limpa o token inválido do armazenamento
+      localStorage.removeItem('authToken');
+      // Força o redirecionamento para a página de login
+      window.location.href = '/'; 
+    }
+    // Para qualquer outro erro, apenas o rejeite para que o '.catch()' do componente possa lidar com ele
+    return Promise.reject(error);
+  }
+);
+
+export const logout = () => {
+  // Limpa o token do armazenamento local
+  localStorage.removeItem('authToken');
+  // Força o redirecionamento para a página de login com recarregamento
+  window.location.href = '/'; 
+};
 
 // Busca todos os itens padrão do checklist.
 export const getItens = () => api.get('/itens');

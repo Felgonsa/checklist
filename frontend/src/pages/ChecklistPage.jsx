@@ -211,7 +211,7 @@ const ChecklistPage = () => {
   return (
     <div className="checklist-page">
       {/* Link para voltar à página anterior (lista de OSs). */}
-      <Link to="/" className="back-link">
+      <Link to="/home" className="back-link">
         ← Voltar para a lista
       </Link>
 

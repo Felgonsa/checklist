@@ -1,5 +1,9 @@
+// --- ARQUIVO backend/db/db.js CORRIGIDO ---
+
+// Garante que as variáveis de ambiente sejam carregadas ANTES de qualquer outra coisa neste arquivo.
+require('dotenv').config(); 
+
 const { Pool } = require('pg');
-require('dotenv').config();
 
 // Verifica se estamos em ambiente de produção
 const isProduction = process.env.NODE_ENV === 'production';
@@ -35,5 +39,5 @@ pool.on('error', (err) => {
 
 module.exports = {
   query: (text, params) => pool.query(text, params),
-  pool: pool, // <-- ADICIONE ESTA LINHA
+  pool: pool,
 };

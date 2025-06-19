@@ -20,6 +20,24 @@ const api = axios.create({
 
 // --- Funções para Interagir com a API ---
 
+export const login = (credentials) => api.post('/login', credentials);
+
+//Incrementa o token de autenticação em todas as requisições
+api.interceptors.request.use(
+  (config) => {
+    // Pega o token do localStorage
+    const token = localStorage.getItem('authToken');
+    // Se o token existir, adiciona ao cabeçalho de autorização
+    if (token) {
+      config.headers['Authorization'] = `Bearer ${token}`;
+    }
+    return config;
+  },
+  (error) => {
+    return Promise.reject(error);
+  }
+);
+
 // Busca todos os itens padrão do checklist.
 export const getItens = () => api.get('/itens');
 

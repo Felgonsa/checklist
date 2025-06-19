@@ -1,24 +1,25 @@
 import { Routes, Route } from 'react-router-dom';
-import HomePage from './pages/HomePage.jsx';
-import ChecklistPage from './pages/ChecklistPage.jsx';
-
+import HomePage from './pages/HomePage';
+import ChecklistPage from './pages/ChecklistPage';
+import LoginPage from './pages/LoginPage'; // Importa a nova página
+import ProtectedRoute from './components/ProtectedRoute'; // Importa a rota protegida
 import './App.css';
+
+// Em App.jsx
 
 function App() {
   return (
-    <div className="App">
-      <header className="app-header">
-        <img className='img-header' src="./LOGO.png" alt="" />
-        <h1>OfiCheck</h1>
-      </header>
-      <main className="app-main">
-        <Routes>
-          <Route path="/" element={<HomePage />} />
-        
-          <Route path="/checklist/:id" element={<ChecklistPage />} />
-        </Routes>
-      </main>
-    </div>
+    <Routes>
+      {/* Rota raiz '/' agora é a página de login e é pública */}
+      <Route path="/" element={<LoginPage />} />
+
+      {/* As rotas protegidas começam aqui */}
+      <Route element={<ProtectedRoute />}>
+        {/* A HomePage agora é acessível em '/home' */}
+        <Route path="/home" element={<HomePage />} />
+        <Route path="/checklist/:id" element={<ChecklistPage />} />
+      </Route>
+    </Routes>
   );
 }
 

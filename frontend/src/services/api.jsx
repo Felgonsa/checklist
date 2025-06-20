@@ -108,5 +108,14 @@ export const deleteFoto = (fotoId) => api.delete(`/fotos/${fotoId}`);
 // Recebe o 'id' da ordem e a 'assinatura' (provavelmente em Base64).
 export const saveAssinatura = (id, assinatura) => api.post(`/ordem-servico/${id}/assinatura`, { assinatura });
 
-// Exporta a instância configurada do Axios como exportação padrão do módulo.
+// --- Funções de Administração ---
+
+// Oficinas
+export const getOficinas = () => api.get('/oficinas');
+export const createOficina = (dadosOficina) => api.post('/oficinas', dadosOficina);
+
+// Usuários
+export const getUsuarios = () => api.get('/usuarios'); // Vamos criar esta rota no backend depois
+export const createUsuario = (dadosUsuario) => api.post('/usuarios', dadosUsuario);
+
 export default api;

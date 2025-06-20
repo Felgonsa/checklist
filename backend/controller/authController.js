@@ -34,7 +34,7 @@ const login = async (req, res) => {
       oficina_id: usuario.oficina_id 
     };
     
-    const token = jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: '10s' });
+    const token = jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: '1h' });
 
     // Envia a resposta com sucesso
     res.status(200).json({ 

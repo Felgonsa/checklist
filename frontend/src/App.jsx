@@ -8,6 +8,7 @@ import ChecklistPage from './pages/ChecklistPage';
 import LoginPage from './pages/LoginPage';
 import ProtectedRoute from './components/ProtectedRoute';
 import './App.css';
+import AdminPage from './pages/AdminPage'; // Importa a nova página de administração
 
 function App() {
   // Este useEffect roda apenas uma vez, quando o aplicativo carrega
@@ -21,7 +22,7 @@ function App() {
 
         if (decodedToken.exp < currentTime) {
           // Se o token já estiver expirado, desloga imediatamente
-          logout();
+          logout();1
         } else {
           // Se for válido, calcula o tempo restante em milissegundos
           const timeToExpire = (decodedToken.exp - currentTime) * 1000;
@@ -49,6 +50,7 @@ function App() {
       <Route element={<ProtectedRoute />}>
         <Route path="/home" element={<HomePage />} />
         <Route path="/checklist/:id" element={<ChecklistPage />} />
+        <Route path="/admin" element={<AdminPage />} />
       </Route>
     </Routes>
   );

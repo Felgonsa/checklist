@@ -44,12 +44,14 @@ const s3 = new S3Client({
 const saveChecklistRespostas = async (req, res) => {
   // Extrai o ID da Ordem de Serviço e o array de respostas do corpo da requisição.
   const { os_id, respostas } = req.body;
+  const { role, oficina_id } = req.user;
 
   // Validação inicial para garantir que os dados necessários foram fornecidos e estão no formato correto.
   if (!os_id || !respostas || !Array.isArray(respostas)) {
     // Se a validação falhar, retorna um erro 400 (Bad Request).
     return res.status(400).json({ error: 'Formato de dados inválido. É necessário "os_id" e um array de "respostas".' });
   }
+
 
   // Obtém um cliente de conexão do pool de conexões do banco de dados.
   // Isso é necessário para gerenciar uma transação.
@@ -58,6 +60,13 @@ const saveChecklistRespostas = async (req, res) => {
   try {
     // Inicia uma transação no banco de dados.
     // Isso garante que todas as operações dentro do bloco 'try' sejam tratadas como uma única unidade.
+    if (role !== 'superadmin') {
+      const osCheck = await db.query('SELECT oficina_id FROM ordem_servico WHERE id = $1', [os_id]);
+      if (osCheck.rows.length === 0 || osCheck.rows[0].oficina_id !== oficina_id) {
+        return res.status(403).json({ error: 'Acesso proibido.' });
+      }
+    }
+
     await client.query('BEGIN');
 
     // Deleta todas as respostas antigas para esta Ordem de Serviço.
@@ -114,4 +123,4 @@ const saveChecklistRespostas = async (req, res) => {
 module.exports = {
   getChecklistItens,
   saveChecklistRespostas,
-};
+}

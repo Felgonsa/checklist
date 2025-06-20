@@ -29,6 +29,7 @@ const { log } = require('console');
 const generatePdf = async (req, res) => {
   // Extrai o 'id' da ordem de serviço dos parâmetros da requisição (ex: /pdf/:id).
   const { id } = req.params;
+   const { role, oficina_id } = req.user;
 
   try {
     // --- ETAPA 1: BUSCAR TODOS OS DADOS NECESSÁRIOS DO BANCO DE DADOS ---
@@ -41,6 +42,13 @@ const generatePdf = async (req, res) => {
     if (osResult.rows.length === 0) {
       // Se não encontrada, retorna um erro 404 (Not Found) com uma mensagem JSON.
       return res.status(404).json({ error: 'Ordem de serviço não encontrada.' });
+    }
+
+     if (role !== 'superadmin') {
+      const osCheck = await db.query('SELECT oficina_id FROM ordem_servico WHERE id = $1', [id]);
+      if (osCheck.rows.length === 0 || osCheck.rows[0].oficina_id !== oficina_id) {
+        return res.status(403).json({ error: 'Acesso proibido.' });
+      }
     }
 
     // Armazena os dados da ordem de serviço encontrada (a primeira linha do resultado).

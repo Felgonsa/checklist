@@ -8,7 +8,8 @@ const checklistController = require('../controller/checklistController.js');
 const mediaController = require('../controller/mediaController.js');
 const pdfController = require('../controller/pdfController.js');
 const authController = require('../controller/authController.js');
-const autenticarToken = require('../middleware/auth.js');
+const {autenticarToken, verificarSuperadmin} = require('../middleware/auth.js');
+const oficinaController = require('../controller/oficinaController.js');
 
 
 // === ROTAS DE ORDEM DE SERVIÇO ===
@@ -33,8 +34,12 @@ router.get('/ordem-servico/:id/pdf',autenticarToken, pdfController.generatePdf);
 
 // === ROTAS DE AUTENTICAÇÃO ===
 router.post('/login', authController.login);
-// Rota para o superadmin criar usuários (protegida)
-router.post('/usuarios', autenticarToken, authController.cadastrarUsuario);
+// Rota para o admin criar usuários e oficinas
+// Apenas o Superadmin pode acessar essa rota
+router.post('/usuarios', autenticarToken, verificarSuperadmin, authController.cadastrarUsuario);
+router.get('/oficinas', autenticarToken, verificarSuperadmin, oficinaController.getOficinas);
+router.post('/oficinas', autenticarToken, verificarSuperadmin, oficinaController.createOficina);
+
 
 
 module.exports = router;

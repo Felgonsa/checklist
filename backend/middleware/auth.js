@@ -14,15 +14,25 @@ function autenticarToken(req, res, next) {
     jwt.verify(token, process.env.JWT_SECRET, (err, user) => {
         if (err) {
             console.log(err);
-            
+
             return res.sendStatus(403) // Forbidden
-            
-            
+
+
         }
         req.user = user
         next()
     })
-    
+
 }
 
-module.exports = autenticarToken
+function verificarSuperadmin(req, res, next) {
+    if (req.user.role !== 'superadmin') {
+        return res.status(403).json({ error: 'Acesso negado. Rota exclusiva ' });
+    }
+    next();
+}
+
+
+
+
+module.exports = { autenticarToken, verificarSuperadmin };

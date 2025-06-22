@@ -113,7 +113,8 @@ export const saveAssinatura = (id, assinatura) => api.post(`/ordem-servico/${id}
 // Oficinas
 export const getOficinas = () => api.get('/oficinas');
 export const createOficina = (dadosOficina) => api.post('/oficinas', dadosOficina);
-
+export const updateOficina = (id, dadosOficina) => api.put(`/oficinas/${id}`, dadosOficina);
+export const deleteOficina = (id) => api.delete(`/oficinas/${id}`);
 // Usuários
 export const getUsuarios = () => api.get('/usuarios'); // Vamos criar esta rota no backend depois
 export const createUsuario = (dadosUsuario) => api.post('/usuarios', dadosUsuario);

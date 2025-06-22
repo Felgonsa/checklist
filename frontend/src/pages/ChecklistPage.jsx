@@ -209,7 +209,7 @@ const ChecklistPage = () => {
 
   // --- Renderização do Componente Principal ---
   return (
-    <div className="checklist-page">
+    <div className="checklist-page teste">
       {/* Link para voltar à página anterior (lista de OSs). */}
       <Link to="/home" className="back-link">
         ← Voltar para a lista
@@ -223,7 +223,7 @@ const ChecklistPage = () => {
         <p>Seguradora: {osData.seguradora_nome || "N/A"}</p> {/* Mostra "N/A" se não houver seguradora */}
       </div>
 
-      ---
+    
       {/* ======================================================= */}
       {/* 1. FORMULÁRIO DO CHECKLIST */}
       {/* ======================================================= */}
@@ -341,7 +341,7 @@ const ChecklistPage = () => {
         ))}
       </div>
 
-      ---
+      
       {/* ======================================================= */}
       {/* 2. SEÇÃO DE FOTOS */}
       {/* ======================================================= */}
@@ -389,7 +389,7 @@ const ChecklistPage = () => {
         </div>
       </div>
 
-      ---
+     
       {/* ======================================================= */}
       {/* 3. BOTÕES DE AÇÃO PRINCIPAIS */}
       {/* ======================================================= */}

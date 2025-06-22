@@ -39,6 +39,8 @@ router.post('/login', authController.login);
 router.post('/usuarios', autenticarToken, verificarSuperadmin, authController.cadastrarUsuario);
 router.get('/oficinas', autenticarToken, verificarSuperadmin, oficinaController.getOficinas);
 router.post('/oficinas', autenticarToken, verificarSuperadmin, oficinaController.createOficina);
+router.put('/oficinas/:id', autenticarToken, verificarSuperadmin, oficinaController.updateOficina);
+router.delete('/oficinas/:id', autenticarToken, verificarSuperadmin, oficinaController.deleteOficina);
 
 
 

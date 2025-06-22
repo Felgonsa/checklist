@@ -29,6 +29,19 @@
   animation: fadeIn 0.5s;
 }
 
+.action-buttons {
+  display: flex;
+  gap: 0.5rem;
+}
+.action-buttons button {
+  padding: 5px 10px;
+  font-size: 0.9rem;
+  border-radius: 4px;
+  border: 1px solid transparent;
+}
+.btn-edit { background-color: #ffc107; }
+.btn-delete { background-color: #dc3545; color: white; }
+
 @keyframes fadeIn {
   from { opacity: 0; }
   to { opacity: 1; }

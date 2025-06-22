@@ -19,11 +19,20 @@
   --cor-card: white;
 }
 
+#root{
+  width: 60%;
+  /* background-color: #bdbdbd; */
+}
 body {
   margin: 0;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
   background-color: var(--cor-fundo);
   color: var(--cor-texto);
+  width: 100%;
+  /* background-color: #ffffff; */
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
 
 .App {
@@ -55,6 +64,7 @@ body {
 
 .btn-save, .btn-pdf, .btn-signature, .btn-new-checklist {
   padding: 10px 20px;
+  margin: 10px;
   border: none;
   border-radius: 6px;
   font-size: 16px;
@@ -82,6 +92,10 @@ body {
 
 /* --- PÁGINA INICIAL (HomePage) --- */
 /* Estilos para a lista de Ordens de Serviço. */
+
+.homepage{
+  width: 100%;
+}
 
 .homepage h2 {
   color: var(--cor-header);
@@ -194,7 +208,7 @@ body {
 
 /* Card de cada item do checklist */
 .checklist-item {
-  background-color: var(--cor-card);
+  /* background-color: var(--cor-card); */
   padding: 1rem 1.5rem;
   border-radius: 8px;
   border: 1px solid var(--cor-borda);
@@ -257,9 +271,11 @@ body {
 .checklist-item textarea,
 .checklist-item .text-input {
   width: 100%;
+  background-color: var(--cor-borda);
   box-sizing: border-box;
   padding: 0.75rem;
-  border: 1px solid var(--cor-borda);
+  border: 1px solid var(--cor-texto);
+  color: var(--cor-texto);
   border-radius: 6px;
   font-family: inherit;
   font-size: 1rem;
@@ -272,7 +288,7 @@ body {
 .checklist-item .text-input:focus {
   outline: none;
   border-color: var(--cor-principal);
-  box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25);
+  box-shadow: 0 0 0 2px rgba(0, 255, 21, 0.26);
 }
 
 

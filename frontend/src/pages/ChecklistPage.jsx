@@ -139,7 +139,7 @@ const ChecklistPage = () => {
       }));
       setSelectedFiles(null); // Limpa os arquivos selecionados do estado.
       document.getElementById("file-input").value = null; // Limpa o valor do input de arquivo para permitir novo upload.
-      toast.sucess("Fotos enviadas com sucesso!"); // Exibe um alerta de sucesso.
+      toast.success("Fotos enviadas com sucesso!"); // Exibe um alerta de sucesso.
     } catch (err) {
       toast.error("Erro ao enviar fotos."); // Exibe um alerta de erro.
       console.error(err); // Loga o erro no console.
@@ -162,7 +162,7 @@ const ChecklistPage = () => {
         ...prevData,
         fotos: prevData.fotos.filter((foto) => foto.id !== fotoId), // Filtra a foto deletada.
       }));
-      toast.sucess("Foto deletada com sucesso!"); // Exibe um alerta de sucesso.
+      toast.success("Foto deletada com sucesso!"); // Exibe um alerta de sucesso.
     } catch (err) {
       toast.error("Erro ao deletar foto."); // Exibe um alerta de erro.
       console.error(err); // Loga o erro no console.
@@ -177,7 +177,7 @@ const ChecklistPage = () => {
       // Atualiza o estado 'osData' com a nova assinatura para exibição (se aplicável).
       setOsData((prev) => ({ ...prev, assinatura_cliente: signatureImage }));
       setIsSignatureModalOpen(false); // Fecha o modal de assinatura.
-      toast.sucess("Assinatura salva com sucesso!"); // Exibe um alerta de sucesso.
+      toast.success("Assinatura salva com sucesso!"); // Exibe um alerta de sucesso.
     } catch (err) {
       toast.error("Erro ao salvar assinatura."); // Exibe um alerta de erro.
       console.error(err); // Loga o erro no console.

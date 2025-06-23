@@ -198,39 +198,29 @@ const createOrdemServico = async (req, res) => {
 
 // Função para deletar uma Ordem de Serviço pelo ID.
 const deleteOrdemServico = async (req, res) => {
-  // Pega o 'id' da OS a ser deletada dos parâmetros da URL.
   const { id } = req.params;
   const { role, oficina_id } = req.user;
+
   try {
-
-
-    // Query SQL para deletar uma linha da tabela 'ordem_servico'.
     let deleteQuery = 'DELETE FROM ordem_servico WHERE id = $1';
-    // Executa a query de exclusão.
-    const values = [id];
+    const values = [id]; // Inicia o array com o primeiro valor
 
+    // Se o usuário não for superadmin, adiciona a segunda condição
     if (role !== 'superadmin') {
-      deleteQuery += ` AND oficina_id = $2`;
-      values.push(oficina_id);
+      deleteQuery += ` AND oficina_id = $2`; // A query agora espera $2
+      values.push(oficina_id); // CORREÇÃO: Adiciona o segundo valor ao array
     }
 
-    const result = await db.query(deleteQuery, [id]);
+    // Agora, a query e os valores estão sincronizados
+    const result = await db.query(deleteQuery, values);
 
-    // Se result.rowCount for 0, significa que nenhuma linha foi deletada,
-    // ou seja, a OS com o ID não foi encontrada.
     if (result.rowCount === 0) {
-      return res.status(404).json({ error: 'Ordem de serviço não encontrada.' });
+      return res.status(404).json({ error: 'Ordem de serviço não encontrada ou acesso não permitido.' });
     }
 
-    // Observação: Graças à configuração 'ON DELETE CASCADE' no banco de dados,
-    // todas as respostas de checklist e fotos associadas a esta OS
-    // serão automaticamente deletadas quando a OS principal for removida.
-    // Não precisamos de queries adicionais aqui para isso.
-
-    // Retorna uma mensagem de sucesso com status 200 (OK).
     res.status(200).json({ message: 'Ordem de serviço deletada com sucesso.' });
+
   } catch (error) {
-    // Se ocorrer um erro, loga e envia uma resposta de erro 500.
     console.error(`Erro ao deletar ordem de serviço ${id}:`, error);
     res.status(500).json({ error: 'Erro interno do servidor.' });
   }

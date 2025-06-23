@@ -595,7 +595,8 @@ body {
 @media (max-width: 1200px) {
   #root {
     /* Em telas pequenas, o contêiner principal ocupa 100% da largura */
-    width: 100%;
+    width: 95%;
+    padding: 5px;
   }
 
  

@@ -7,64 +7,56 @@ const login = async (req, res) => {
   const { email, senha } = req.body;
 
   if (!email || !senha) {
-    return res
-      .status(400)
-      .json({ message: "E-mail e senha são obrigatórios." });
+    return res.status(400).json({ message: 'E-mail e senha são obrigatórios.' });
   }
+
   try {
+    // Consulta SQL que agora busca o usuário E o nome da sua oficina
     const query = `
-      SELECT u.id, u.nome, u.email, u.senha, u.role, u.oficina_id, o.nome_fantasia as oficina_nome
-      FROM usuarios u
-      LEFT JOIN oficinas o ON u.oficina_id = o.id
-      WHERE u.email = $1;
+      SELECT 
+        u.id, u.nome, u.email, u.senha, u.role, u.oficina_id, 
+        o.nome_fantasia as oficina_nome
+      FROM 
+        usuarios u
+      LEFT JOIN 
+        oficinas o ON u.oficina_id = o.id
+      WHERE 
+        u.email = $1;
     `;
     const result = await db.query(query, [email]);
     const usuario = result.rows[0];
 
-    // Verifica se o usuário existe
-
     if (!usuario) {
-      return res.status(401).json({ message: "Usuário ou Senha incorretos" }); // Mensagem genérica por segurança
+      return res.status(401).json({ message: 'Credenciais inválidas.' });
     }
-
-    // Compara a senha enviada com a senha criptografada no banco
 
     const senhaValida = await bcrypt.compare(senha, usuario.senha);
-
     if (!senhaValida) {
-      return res.status(401).json({ message: "Usuário ou Senha incorretos" });
+      return res.status(401).json({ message: 'Credenciais inválidas.' });
     }
 
-    // Gera o Token JWT
-
-    // O 'payload' contém as informações que queremos guardar no token
-
-    const payload = {
-      id: usuario.id,
-      role: usuario.role,
-      oficina_id: usuario.oficina_id,
+    const payload = { 
+      id: usuario.id, 
+      role: usuario.role, 
+      oficina_id: usuario.oficina_id 
     };
+    
+    const token = jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: '8h' });
 
-    const token = jwt.sign(payload, process.env.JWT_SECRET, {
-      expiresIn: "8h",
-    });
-
-    // Envia a resposta com sucesso
-
-    res.status(200).json({
-      message: `Login bem-sucedido! Bem-vindo, ${usuario.nome}.`,
+    // CORREÇÃO: Resposta que agora inclui um objeto 'usuario' com todos os dados
+    res.status(200).json({ 
+      message: `Login bem-sucedido! Bem-vindo, ${usuario.nome}.`, 
       token: token,
       usuario: {
-        id: usuario.id,
-        nome: usuario.nome,
-        email: usuario.email,
-        role: usuario.role
+          nome: usuario.nome,
+          role: usuario.role,
+          oficinaNome: usuario.oficina_nome || 'Sem oficina' // Envia o nome da oficina
       }
     });
-  } catch (error) {
-    console.error("Erro no processo de login:", error);
 
-    res.status(500).json({ message: "Erro interno do servidor." });
+  } catch (error) {
+    console.error('Erro no processo de login:', error);
+    res.status(500).json({ message: 'Erro interno do servidor.' });
   }
 };
 

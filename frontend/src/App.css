@@ -21,7 +21,7 @@
 
 #root {
   width: 60%;
-  /* background-color: #bdbdbd; */
+  
 }
 body {
   margin: 0;
@@ -590,4 +590,21 @@ body {
 .edit-os-btn:hover {
   background-color: #ffc107;
   color: black;
+}
+
+@media (max-width: 768px) {
+  #root {
+    /* Em telas pequenas, o contêiner principal ocupa 100% da largura */
+    width: 100%;
+  }
+
+  /* Ajuste no padding do cabeçalho para telas menores */
+  .app-header {
+    padding: 1rem;
+  }
+
+  /* Ajuste no padding geral para telas menores */
+  .admin-page, .homepage, .checklist-page {
+     padding: 1rem;
+  }
 }

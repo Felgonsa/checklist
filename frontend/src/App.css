@@ -19,13 +19,15 @@
   --cor-card: white;
 }
 
-#root{
+#root {
   width: 60%;
   /* background-color: #bdbdbd; */
 }
 body {
   margin: 0;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", "Oxygen",
+    "Ubuntu", "Cantarell", "Fira Sans", "Droid Sans", "Helvetica Neue",
+    sans-serif;
   background-color: var(--cor-fundo);
   color: var(--cor-texto);
   width: 100%;
@@ -35,15 +37,65 @@ body {
   align-items: center;
 }
 
-.app-header { display: flex; justify-content: space-between; align-items: center; background-color: #333; padding: 1rem 2rem; }
-.app-header nav { display: flex; gap: 1.5rem; }
-.app-header a { color: white; text-decoration: none; }
-.btn-logout { background-color: #dc3545; color: white; border: none; padding: 0.5rem 1rem; border-radius: 4px; cursor: pointer; }
+.app-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background-color: #343a40; /* Um cinza escuro */
+  color: white;
+  padding: 1rem 2rem;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+.user-info {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+.app-header a {
+  color: white;
+  text-decoration: none;
+}
+.app-header a:hover {
+  color: #ffc107; /* Amarelo para destaque */
+}
+.app-header nav {
+  display: flex;
+  gap: 1.5rem;
+}
+.btn-logout {
+  background-color: #dc3545;
+  color: white;
+  border: none;
+  padding: 0.6rem 1.2rem;
+  border-radius: 5px;
+  cursor: pointer;
+  font-weight: bold;
+  transition: background-color 0.2s;
+}
+
+.btn-logout:hover {
+  background-color: #c82333;
+}
+
+.user-info {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.user-info .user-name {
+  font-weight: bold;
+  font-size: 1.1em;
+}
+
+.user-info .user-oficina {
+  font-size: 0.9em;
+  color: #adb5bd; /* Um cinza mais claro */
+}
 
 .App {
   text-align: center;
 }
-
 
 .app-main {
   padding: 0 1rem;
@@ -54,7 +106,10 @@ body {
 /* --- ESTILOS DE BOTÕES GLOBAIS --- */
 /* Estilos base para os botões principais de ação. */
 
-.btn-save, .btn-pdf, .btn-signature, .btn-new-checklist {
+.btn-save,
+.btn-pdf,
+.btn-signature,
+.btn-new-checklist {
   padding: 10px 20px;
   margin: 10px;
   border: none;
@@ -65,7 +120,10 @@ body {
   transition: background-color 0.2s, transform 0.1s;
 }
 
-.btn-save:hover, .btn-pdf:hover, .btn-signature:hover, .btn-new-checklist:hover {
+.btn-save:hover,
+.btn-pdf:hover,
+.btn-signature:hover,
+.btn-new-checklist:hover {
   transform: translateY(-1px);
 }
 
@@ -76,16 +134,27 @@ body {
 }
 
 /* Cores específicas dos botões */
-.btn-new-checklist { background-color: var(--cor-principal); color: white; }
-.btn-save { background-color: var(--cor-sucesso); color: white; }
-.btn-pdf { background-color: var(--cor-perigo); color: white; }
-.btn-signature { background-color: var(--cor-info); color: white; }
-
+.btn-new-checklist {
+  background-color: var(--cor-principal);
+  color: white;
+}
+.btn-save {
+  background-color: var(--cor-sucesso);
+  color: white;
+}
+.btn-pdf {
+  background-color: var(--cor-perigo);
+  color: white;
+}
+.btn-signature {
+  background-color: var(--cor-info);
+  color: white;
+}
 
 /* --- PÁGINA INICIAL (HomePage) --- */
 /* Estilos para a lista de Ordens de Serviço. */
 
-.homepage{
+.homepage {
   width: 100%;
 }
 
@@ -104,7 +173,7 @@ body {
   background-color: var(--cor-card);
   border: 1px solid var(--cor-borda);
   border-radius: 8px;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
   transition: transform 0.2s, box-shadow 0.2s;
   display: flex;
   justify-content: space-between;
@@ -121,7 +190,7 @@ body {
 
 .os-card:hover {
   transform: translateY(-3px);
-  box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
 }
 
 .os-card h3 {
@@ -156,7 +225,6 @@ body {
   background-color: var(--cor-perigo);
   color: white;
 }
-
 
 /* --- PÁGINA DO CHECKLIST (ChecklistPage) --- */
 
@@ -283,7 +351,6 @@ body {
   box-shadow: 0 0 0 2px rgba(0, 255, 21, 0.26);
 }
 
-
 /* --- GALERIA DE FOTOS --- */
 
 .photos-section {
@@ -300,12 +367,12 @@ body {
 }
 
 .photo-container {
-  display: grid; 
+  display: grid;
   place-items: center;
   overflow: hidden;
   border-radius: 8px;
-  box-shadow: 0 2px 5px rgba(0,0,0,0.05);
-  aspect-ratio: 1 / 1; 
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+  aspect-ratio: 1 / 1;
   position: relative;
 }
 
@@ -350,7 +417,6 @@ body {
   border: 1px solid var(--cor-borda);
 }
 
-
 /* --- BOTÕES DE AÇÃO (Salvar, PDF, Assinatura) --- */
 
 .checklist-actions {
@@ -362,7 +428,6 @@ body {
   padding-top: 2rem;
   border-top: 1px solid var(--cor-borda);
 }
-
 
 /* --- MODAL (Novo Checklist e Assinatura) --- */
 
@@ -386,7 +451,7 @@ body {
   border-radius: 8px;
   width: 100%;
   max-width: 500px;
-  box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
 }
 
 .modal-content h2 {
@@ -451,7 +516,7 @@ body {
   border-radius: 5px;
   outline: none;
   opacity: 0.9;
-  transition: opacity .2s;
+  transition: opacity 0.2s;
 }
 
 .range-slider:hover {
@@ -468,7 +533,7 @@ body {
   border-radius: 50%;
   cursor: pointer;
   border: 2px solid white;
-  box-shadow: 0 0 5px rgba(0,0,0,0.2);
+  box-shadow: 0 0 5px rgba(0, 0, 0, 0.2);
 }
 
 /* Estilo do "pino" de arrastar para Firefox */
@@ -479,7 +544,7 @@ body {
   border-radius: 50%;
   cursor: pointer;
   border: 2px solid white;
-  box-shadow: 0 0 5px rgba(0,0,0,0.2);
+  box-shadow: 0 0 5px rgba(0, 0, 0, 0.2);
 }
 
 .range-slider-value {
@@ -520,7 +585,6 @@ body {
   background-color: transparent;
   color: #ffc107; /* Amarelo */
   border: 1px solid #ffc107;
-  
 }
 
 .edit-os-btn:hover {

@@ -12,10 +12,13 @@ const login = async (req, res) => {
       .json({ message: "E-mail e senha são obrigatórios." });
   }
   try {
-    const result = await db.query("SELECT * FROM usuarios WHERE email = $1", [
-      email,
-    ]);
-
+    const query = `
+      SELECT u.id, u.nome, u.email, u.senha, u.role, u.oficina_id, o.nome_fantasia as oficina_nome
+      FROM usuarios u
+      LEFT JOIN oficinas o ON u.oficina_id = o.id
+      WHERE u.email = $1;
+    `;
+    const result = await db.query(query, [email]);
     const usuario = result.rows[0];
 
     // Verifica se o usuário existe
@@ -43,7 +46,7 @@ const login = async (req, res) => {
     };
 
     const token = jwt.sign(payload, process.env.JWT_SECRET, {
-      expiresIn: "1h",
+      expiresIn: "8h",
     });
 
     // Envia a resposta com sucesso

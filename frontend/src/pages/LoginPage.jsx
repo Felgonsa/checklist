@@ -19,6 +19,8 @@ const LoginPage = () => {
       // Guarda o token recebido no armazenamento local do navegador
       localStorage.setItem("authToken", response.data.token);
       localStorage.setItem("userRole", response.data.usuario.role);
+      localStorage.setItem("userName", response.data.usuario.nome);
+      localStorage.setItem("userOficina", response.data.usuario.oficinaNome);
       navigate("/home");
     } catch (err) {
       setError("E-mail ou senha inválidos. Tente novamente.");

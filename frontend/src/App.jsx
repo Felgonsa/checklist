@@ -9,6 +9,9 @@ import LoginPage from './pages/LoginPage';
 import ProtectedRoute from './components/ProtectedRoute';
 import './App.css';
 import AdminPage from './pages/AdminPage'; // Importa a nova página de administração
+import ProfilePage from './pages/ProfilePage'; // Importa a nova página de perfil 
+import { ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 function App() {
   // Este useEffect roda apenas uma vez, quando o aplicativo carrega
@@ -45,14 +48,19 @@ function App() {
   }, []); // O array vazio garante que isso rode só na inicialização
 
   return (
+    <>  
     <Routes>
       <Route path="/" element={<LoginPage />} />
       <Route element={<ProtectedRoute />}>
         <Route path="/home" element={<HomePage />} />
         <Route path="/checklist/:id" element={<ChecklistPage />} />
         <Route path="/admin" element={<AdminPage />} />
+        <Route path="/perfil" element={<ProfilePage />} />
       </Route>
+      
     </Routes>
+    <ToastContainer autoClose={5000} hideProgressBar />
+    </>
   );
 }
 

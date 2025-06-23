@@ -62,6 +62,7 @@ api.interceptors.response.use(
 export const logout = () => {
   // Limpa o token do armazenamento local
   localStorage.removeItem('authToken');
+  localStorage.removeItem('userRole');
   // Força o redirecionamento para a página de login com recarregamento
   window.location.href = '/'; 
 };
@@ -108,6 +109,12 @@ export const deleteFoto = (fotoId) => api.delete(`/fotos/${fotoId}`);
 // Recebe o 'id' da ordem e a 'assinatura' (provavelmente em Base64).
 export const saveAssinatura = (id, assinatura) => api.post(`/ordem-servico/${id}/assinatura`, { assinatura });
 
+export const getPdf = (id) => {
+  return api.get(`/ordem-servico/${id}/pdf`, {
+    responseType: 'blob', // MUITO IMPORTANTE: Pede ao axios para tratar a resposta como um arquivo
+  });
+};
+
 // --- Funções de Administração ---
 
 // Oficinas
@@ -116,7 +123,11 @@ export const createOficina = (dadosOficina) => api.post('/oficinas', dadosOficin
 export const updateOficina = (id, dadosOficina) => api.put(`/oficinas/${id}`, dadosOficina);
 export const deleteOficina = (id) => api.delete(`/oficinas/${id}`);
 // Usuários
-export const getUsuarios = () => api.get('/usuarios'); // Vamos criar esta rota no backend depois
+export const getUsuarios = () => api.get('/usuarios'); 
 export const createUsuario = (dadosUsuario) => api.post('/usuarios', dadosUsuario);
+export const updateUsuario = (id, dadosUsuario) => api.put(`/usuarios/${id}`, dadosUsuario);
+export const deleteUsuario = (id) => api.delete(`/usuarios/${id}`);
+export const changePassword = (data) => api.put('/usuarios/change-password', data);
+
 
 export default api;

@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from "react"; // Importa hooks essenciais do React para estado e efeitos colaterais.
 import { useParams, Link } from "react-router-dom"; // Importa hooks do React Router para acessar parâmetros da URL e navegação.
 import SignaturePad from "../components/SignaturePad"; // Importa um componente personalizado para a assinatura.
+import Header from "../components/Header";
+import { toast } from 'react-toastify';
 import {
   getOrdemServicoById, // Função para buscar dados de uma OS específica.
   getItens, // Função para buscar os itens padrão do checklist.
@@ -9,6 +11,7 @@ import {
   deleteFoto, // Função para deletar fotos.
   API_BASE_URL, // URL base da API (para construir a URL do PDF).
   saveAssinatura, // Função para salvar a assinatura.
+  getPdf, // Função para gerar o PDF do checklist.
 } from "../services/api"; // Importa todas as funções de interação com a API de um arquivo de serviços.
 
 // Componente funcional principal para a página de Checklist.
@@ -98,9 +101,9 @@ const ChecklistPage = () => {
         os_id: id,
         respostas: respostasParaSalvar,
       });
-      alert("Checklist salvo com sucesso!"); // Exibe um alerta de sucesso.
+      toast.success("Checklist salvo com sucesso!"); // Exibe um alerta de sucesso.
     } catch (err) {
-      alert("Erro ao salvar o checklist."); // Exibe um alerta de erro.
+      toast.error("Erro ao salvar o checklist."); // Exibe um alerta de erro.
       console.error(err); // Loga o erro no console.
     } finally {
       setSaving(false); // Desativa o estado de salvamento.
@@ -116,7 +119,7 @@ const ChecklistPage = () => {
   const handlePhotoUpload = async () => {
     // Validação: verifica se algum arquivo foi selecionado.
     if (!selectedFiles || selectedFiles.length === 0) {
-      alert("Por favor, selecione ao menos um arquivo.");
+      toast.warning("Por favor, selecione ao menos um arquivo.");
       return;
     }
     setUploading(true); // Ativa o estado de upload.
@@ -136,9 +139,9 @@ const ChecklistPage = () => {
       }));
       setSelectedFiles(null); // Limpa os arquivos selecionados do estado.
       document.getElementById("file-input").value = null; // Limpa o valor do input de arquivo para permitir novo upload.
-      alert("Fotos enviadas com sucesso!"); // Exibe um alerta de sucesso.
+      toast.sucess("Fotos enviadas com sucesso!"); // Exibe um alerta de sucesso.
     } catch (err) {
-      alert("Erro ao enviar fotos."); // Exibe um alerta de erro.
+      toast.error("Erro ao enviar fotos."); // Exibe um alerta de erro.
       console.error(err); // Loga o erro no console.
     } finally {
       setUploading(false); // Desativa o estado de upload.
@@ -159,9 +162,9 @@ const ChecklistPage = () => {
         ...prevData,
         fotos: prevData.fotos.filter((foto) => foto.id !== fotoId), // Filtra a foto deletada.
       }));
-      alert("Foto deletada com sucesso!"); // Exibe um alerta de sucesso.
+      toast.sucess("Foto deletada com sucesso!"); // Exibe um alerta de sucesso.
     } catch (err) {
-      alert("Erro ao deletar foto."); // Exibe um alerta de erro.
+      toast.error("Erro ao deletar foto."); // Exibe um alerta de erro.
       console.error(err); // Loga o erro no console.
     }
   };
@@ -174,30 +177,46 @@ const ChecklistPage = () => {
       // Atualiza o estado 'osData' com a nova assinatura para exibição (se aplicável).
       setOsData((prev) => ({ ...prev, assinatura_cliente: signatureImage }));
       setIsSignatureModalOpen(false); // Fecha o modal de assinatura.
-      alert("Assinatura salva com sucesso!"); // Exibe um alerta de sucesso.
+      toast.sucess("Assinatura salva com sucesso!"); // Exibe um alerta de sucesso.
     } catch (err) {
-      alert("Erro ao salvar assinatura."); // Exibe um alerta de erro.
+      toast.error("Erro ao salvar assinatura."); // Exibe um alerta de erro.
       console.error(err); // Loga o erro no console.
     }
   };
 
   // Lida com a geração e abertura do PDF.
-  const handleGeneratePdf = () => {
-    // 1. Gera um "cache buster" (número único baseado na data/hora atual).
-    // Isso é feito para garantir que o navegador sempre solicite uma nova versão do PDF
-    // e não use uma versão em cache antiga, especialmente após atualizações no checklist.
-    const cacheBuster = `?t=${Date.now()}`;
+  const handleGeneratePdf = async () => {
+    try {
+      const response = await getPdf(id); // Chama a API, que agora recebe o PDF como anexo
 
-    // 2. Constrói a URL completa para o endpoint do PDF, adicionando o cache buster.
-    const pdfUrl = `${API_BASE_URL}/api/checklist/ordem-servico/${id}/pdf${cacheBuster}`;
+      // Cria uma URL temporária para o arquivo que foi baixado na memória
+      const file = new Blob([response.data], { type: "application/pdf" });
+      const fileURL = URL.createObjectURL(file);
 
-    // Loga a URL que será aberta para fins de depuração.
-    console.log("Abrindo URL do PDF com cache buster:", pdfUrl);
+      // --- Lógica para forçar o download ---
+      // 1. Cria um link temporário na memória
+      const link = document.createElement("a");
 
-    // 3. Abre a URL do PDF em uma nova aba do navegador.
-    window.open(pdfUrl, "_blank");
+      // 2. Define a URL do link como a URL do nosso arquivo
+      link.href = fileURL;
+
+      // 3. Define o nome do arquivo que será baixado
+      link.setAttribute("download", `checklist-${osData?.veiculo_modelo}-${osData?.veiculo_placa}.pdf`);
+      // const nomeDoArquivo = `checklist-${osData?.veiculo_mod}-${osData?.veiculo_placa}.pdf`;
+
+      // 4. Adiciona o link ao corpo do documento (necessário para alguns navegadores)
+      document.body.appendChild(link);
+
+      // 5. Simula um clique no link
+      link.click();
+
+      // 6. Remove o link do documento após o clique
+      document.body.removeChild(link);
+    } catch (error) {
+      console.error("Erro ao gerar o PDF:", error);
+      toast.error("Não foi possível gerar o PDF.");
+    }
   };
-
   // --- Renderização Condicional ---
 
   // Exibe mensagem de carregamento enquanto os dados estão sendo buscados.
@@ -209,6 +228,8 @@ const ChecklistPage = () => {
 
   // --- Renderização do Componente Principal ---
   return (
+    <>  
+     <Header />
     <div className="checklist-page teste">
       {/* Link para voltar à página anterior (lista de OSs). */}
       <Link to="/home" className="back-link">
@@ -220,10 +241,10 @@ const ChecklistPage = () => {
         <h2>Checklist para: {osData.cliente_nome}</h2>
         <p>Veículo: {osData.veiculo_modelo}</p>
         <p>Placa: {osData.veiculo_placa}</p>
-        <p>Seguradora: {osData.seguradora_nome || "N/A"}</p> {/* Mostra "N/A" se não houver seguradora */}
+        <p>Seguradora: {osData.seguradora_nome || "N/A"}</p>{" "}
+        {/* Mostra "N/A" se não houver seguradora */}
       </div>
 
-    
       {/* ======================================================= */}
       {/* 1. FORMULÁRIO DO CHECKLIST */}
       {/* ======================================================= */}
@@ -234,7 +255,8 @@ const ChecklistPage = () => {
             {/* Cabeçalho do item do checklist, alinhando nome e campo de input. */}
             <div className="item-header">
               <label className="item-name">
-                {item.ordem}. {item.nome} {/* Exibe a ordem e o nome do item. */}
+                {item.ordem}. {item.nome}{" "}
+                {/* Exibe a ordem e o nome do item. */}
               </label>
 
               <div className="item-input-area">
@@ -341,7 +363,6 @@ const ChecklistPage = () => {
         ))}
       </div>
 
-      
       {/* ======================================================= */}
       {/* 2. SEÇÃO DE FOTOS */}
       {/* ======================================================= */}
@@ -384,12 +405,12 @@ const ChecklistPage = () => {
             disabled={!selectedFiles || uploading} // Desabilita o botão se não houver arquivos ou se já estiver enviando.
             className="btn-primary"
           >
-            {uploading ? "Enviando..." : "Enviar Fotos"} {/* Texto dinâmico do botão. */}
+            {uploading ? "Enviando..." : "Enviar Fotos"}{" "}
+            {/* Texto dinâmico do botão. */}
           </button>
         </div>
       </div>
 
-     
       {/* ======================================================= */}
       {/* 3. BOTÕES DE AÇÃO PRINCIPAIS */}
       {/* ======================================================= */}
@@ -419,6 +440,7 @@ const ChecklistPage = () => {
         />
       )}
     </div>
+    </>
   );
 };
 

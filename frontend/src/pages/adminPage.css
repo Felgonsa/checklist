@@ -1,4 +1,17 @@
 /* Arquivo: frontend/src/pages/AdminPage.css */
+
+
+:root {
+  /* Aqui declaramos a variável --primary-color e damos a ela um valor. */
+  --primary-color: #007bff; /* Um azul padrão e moderno */
+  
+  /* Podemos declarar outras para manter a consistência */
+  --cor-fundo: #f8f9fa;
+  --cor-texto: #212529;
+  --cor-header: #343a40;
+  --cor-borda: #6d6d6d;
+  --cor-card: white;
+}
 .admin-page {
   padding: 2rem;
   max-width: 1000px;
@@ -13,7 +26,8 @@
 .admin-tabs button {
   padding: 1rem;
   border: none;
-  background-color: transparent;
+  background-color:black;
+  color: white;
   cursor: pointer;
   font-size: 1.1rem;
   margin-right: 1rem;
@@ -22,7 +36,8 @@
 
 .admin-tabs button.active {
   border-bottom: 3px solid var(--primary-color);
-  color: var(--primary-color);
+  color: var(--cor-borda);
+  
 }
 
 .admin-section {

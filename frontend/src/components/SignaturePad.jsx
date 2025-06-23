@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import SignatureCanvas from 'react-signature-canvas';
 import './SignaturePad.css';
+import { toast } from 'react-toastify';
 
 const SignaturePad = ({ onSave, onClose }) => {
   const sigCanvas = useRef({});
@@ -28,7 +29,7 @@ const SignaturePad = ({ onSave, onClose }) => {
 
   const save = () => {
     if (sigCanvas.current.isEmpty()) {
-      alert('Por favor, forneça uma assinatura.');
+      toast.warning('Por favor, forneça uma assinatura.');
       return;
     }
     // Agora, em vez de gerar a imagem na hora, usamos a que já está salva no estado

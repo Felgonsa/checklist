@@ -1,30 +1,28 @@
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { login } from '../services/api'; // Precisaremos criar esta função
+import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { login } from "../services/api"; // Precisaremos criar esta função
 
 const LoginPage = () => {
-  const [email, setEmail] = useState('');
-  const [senha, setSenha] = useState('');
-  const [error, setError] = useState('');
+  const [email, setEmail] = useState("");
+  const [senha, setSenha] = useState("");
+  const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setError('');
+    setError("");
     setIsLoading(true);
 
     try {
       const response = await login({ email, senha });
       // Guarda o token recebido no armazenamento local do navegador
-      localStorage.setItem('authToken', response.data.token);
-      
-      
-      
-       window.location.href = '/home'; 
+      localStorage.setItem("authToken", response.data.token);
+      localStorage.setItem("userRole", response.data.usuario.role);
+      navigate("/home");
     } catch (err) {
-      setError('E-mail ou senha inválidos. Tente novamente.');
-      console.error('Erro de login:', err);
+      setError("E-mail ou senha inválidos. Tente novamente.");
+      console.error("Erro de login:", err);
     } finally {
       setIsLoading(false);
     }
@@ -54,8 +52,12 @@ const LoginPage = () => {
             />
           </div>
           {error && <p className="error-message">{error}</p>}
-          <button type="submit" className="btn-primary login-btn" disabled={isLoading}>
-            {isLoading ? 'Entrando...' : 'Entrar'}
+          <button
+            type="submit"
+            className="btn-primary login-btn"
+            disabled={isLoading}
+          >
+            {isLoading ? "Entrando..." : "Entrar"}
           </button>
         </form>
       </div>

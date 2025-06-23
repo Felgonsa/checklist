@@ -13,13 +13,14 @@ const getOficinas = async (req, res) => {
 
 // Função para criar uma nova oficina (só para o superadmin)
 const createOficina = async (req, res) => {
-  const { nome_fantasia, cnpj } = req.body;
+  // Adiciona email e telefone
+  const { nome_fantasia, cnpj, email, telefone } = req.body;
   if (!nome_fantasia) {
     return res.status(400).json({ error: 'Nome fantasia é obrigatório.' });
   }
   try {
-    const query = 'INSERT INTO oficinas (nome_fantasia, cnpj) VALUES ($1, $2) RETURNING *';
-    const values = [nome_fantasia, cnpj || null];
+    const query = 'INSERT INTO oficinas (nome_fantasia, cnpj, email, telefone) VALUES ($1, $2, $3, $4) RETURNING *';
+    const values = [nome_fantasia, cnpj || null, email || null, telefone || null];
     const { rows } = await db.query(query, values);
     res.status(201).json(rows[0]);
   } catch (error) {
@@ -30,17 +31,15 @@ const createOficina = async (req, res) => {
 
 const updateOficina = async (req, res) => {
   const { id } = req.params;
-  const { nome_fantasia, cnpj } = req.body;
-
+  // Adiciona email e telefone
+  const { nome_fantasia, cnpj, email, telefone } = req.body;
   if (!nome_fantasia) {
     return res.status(400).json({ error: 'Nome fantasia é obrigatório.' });
   }
-
   try {
-    const query = 'UPDATE oficinas SET nome_fantasia = $1, cnpj = $2 WHERE id = $3 RETURNING *';
-    const values = [nome_fantasia, cnpj || null, id];
+    const query = 'UPDATE oficinas SET nome_fantasia = $1, cnpj = $2, email = $3, telefone = $4 WHERE id = $5 RETURNING *';
+    const values = [nome_fantasia, cnpj || null, email || null, telefone || null, id];
     const { rows } = await db.query(query, values);
-
     if (rows.length === 0) {
       return res.status(404).json({ error: 'Oficina não encontrada.' });
     }

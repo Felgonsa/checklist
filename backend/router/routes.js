@@ -37,10 +37,17 @@ router.post('/login', authController.login);
 // Rota para o admin criar usuários e oficinas
 // Apenas o Superadmin pode acessar essa rota
 router.post('/usuarios', autenticarToken, verificarSuperadmin, authController.cadastrarUsuario);
+router.get('/usuarios', autenticarToken, verificarSuperadmin, authController.getUsuarios);
+router.put('/usuarios/change-password', autenticarToken, authController.changePassword);
+router.put('/usuarios/:id', autenticarToken, verificarSuperadmin, authController.updateUsuario);
+router.delete('/usuarios/:id', autenticarToken, verificarSuperadmin, authController.deleteUsuario);
 router.get('/oficinas', autenticarToken, verificarSuperadmin, oficinaController.getOficinas);
 router.post('/oficinas', autenticarToken, verificarSuperadmin, oficinaController.createOficina);
 router.put('/oficinas/:id', autenticarToken, verificarSuperadmin, oficinaController.updateOficina);
 router.delete('/oficinas/:id', autenticarToken, verificarSuperadmin, oficinaController.deleteOficina);
+
+// Rota para o usuário logado alterar sua própria senha
+
 
 
 

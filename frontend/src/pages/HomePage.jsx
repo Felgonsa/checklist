@@ -2,6 +2,9 @@ import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { getOrdensServico, deleteOrdemServico } from "../services/api";
 import AddChecklistModal from "../components/AddChecklistModal";
+import Header from "../components/Header";
+import { toast } from 'react-toastify';
+
 
 // Hook customizado que "atrasa" a execução da busca para não sobrecarregar a API
 const useDebounce = (value, delay) => {
@@ -104,7 +107,7 @@ const HomePage = () => {
       await deleteOrdemServico(id);
       setOrdens(prevOrdens => prevOrdens.filter(ordem => ordem.id !== id));
     } catch (err) {
-      alert('Falha ao deletar a ordem de serviço.');
+      toast.error('Falha ao deletar a ordem de serviço.');
       console.error(err);
     }
   };
@@ -112,6 +115,8 @@ const HomePage = () => {
   // --- RENDERIZAÇÃO ---
 
   return (
+    <>
+    <Header />
     <div className="homepage">
       <h2>Ordens de Serviço Abertas</h2>
       <button className="btn-new-checklist" onClick={handleOpenCreateModal}>
@@ -169,6 +174,7 @@ const HomePage = () => {
         ordemParaEditar={ordemEmEdicao}
       />
     </div>
+    </>
   );
 };
 

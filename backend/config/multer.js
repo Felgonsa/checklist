@@ -1,7 +1,16 @@
 const multer = require('multer');
+const path = require('path');
 
-// Salva o arquivo na memória como um Buffer
-const storage = multer.memoryStorage();
+const storage = multer.diskStorage({
+  destination: function (req, file, cb) {
+    cb(null, 'uploads/'); // Define a pasta de destino
+  },
+  filename: function (req, file, cb) {
+    // Cria um nome de arquivo único para evitar conflitos
+    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+    cb(null, file.fieldname + '-' + uniqueSuffix + path.extname(file.originalname));
+  }
+});
 
 const fileFilter = (req, file, cb) => {
     if (file.mimetype.startsWith('image/')) {
@@ -14,7 +23,7 @@ const fileFilter = (req, file, cb) => {
 const upload = multer({ 
     storage: storage,
     fileFilter: fileFilter,
-    limits: { fileSize: 1024 * 1024 * 5 } // Limite de 5MB por arquivo
+    limits: { fileSize: 1024 * 1024 * 10 } // Limite de 10MB
 });
 
 module.exports = upload;

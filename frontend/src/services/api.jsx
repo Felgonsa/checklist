@@ -5,7 +5,7 @@ import axios from 'axios'; // Importa a biblioteca Axios para fazer requisiçõe
 // Define a URL base do seu backend.
 // Ele tenta pegar a URL da variável de ambiente VITE_API_URL (usada em projetos Vite).
 // Se a variável de ambiente não estiver definida, usa 'http://localhost:3001' como padrão.
-const BACKEND_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
+const BACKEND_URL = import.meta.env.VITE_API_URL || 'http://192.168.15.115:3001';
 
 // Exporta a URL base do backend. Pode ser útil para outras partes do frontend
 // que precisam da URL completa (por exemplo, para gerar links de PDF).

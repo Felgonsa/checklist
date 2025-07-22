@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react"; // Importa hooks essenciais 
 import { useParams, Link } from "react-router-dom"; // Importa hooks do React Router para acessar parâmetros da URL e navegação.
 import SignaturePad from "../components/SignaturePad"; // Importa um componente personalizado para a assinatura.
 import Header from "../components/Header";
-import { toast } from 'react-toastify';
+import { toast } from "react-toastify";
 import {
   getOrdemServicoById, // Função para buscar dados de uma OS específica.
   getItens, // Função para buscar os itens padrão do checklist.
@@ -11,8 +11,10 @@ import {
   deleteFoto, // Função para deletar fotos.
   API_BASE_URL, // URL base da API (para construir a URL do PDF).
   saveAssinatura, // Função para salvar a assinatura.
-  getPdf, // Função para gerar o PDF do checklist.
 } from "../services/api"; // Importa todas as funções de interação com a API de um arquivo de serviços.
+
+import html2pdf from "html2pdf.js";
+import ChecklistReport from "../components/ChecklistReport";
 
 // Componente funcional principal para a página de Checklist.
 const ChecklistPage = () => {
@@ -29,6 +31,7 @@ const ChecklistPage = () => {
   const [selectedFiles, setSelectedFiles] = useState(null); // Armazena os arquivos de foto selecionados para upload.
   const [uploading, setUploading] = useState(false); // Indica se as fotos estão sendo enviadas.
   const [isSignatureModalOpen, setIsSignatureModalOpen] = useState(false); // Controla a visibilidade do modal de assinatura.
+  const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
 
   // Hook `useEffect` para buscar os dados iniciais da OS e dos itens do checklist.
   // Ele é executado uma vez quando o componente é montado e sempre que o 'id' muda.
@@ -71,6 +74,49 @@ const ChecklistPage = () => {
     };
     fetchData(); // Chama a função assíncrona para buscar os dados.
   }, [id]); // O efeito é re-executado se o 'id' da OS mudar.
+
+  useEffect(() => {
+    // Este efeito só roda se isGeneratingPdf for true
+    if (isGeneratingPdf) {
+      // Adicionamos um pequeno timeout para dar tempo ao navegador de renderizar o componente
+      const timer = setTimeout(() => {
+        const element = document.getElementById("pdf-content");
+
+        if (element) {
+          // Garante que o elemento existe antes de prosseguir
+          const opt = {
+            margin: 0,
+            filename: `checklist-carro-${
+              osData?.veiculo_placa || "veiculo"
+            }.pdf`,
+            image: { type: "jpeg", quality: 0.98 },
+            html2canvas: { scale: 2, useCORS: true },
+            jsPDF: { unit: "mm", format: "a4", orientation: "portrait" },
+          };
+
+          html2pdf()
+            .from(element)
+            .set(opt)
+            .save()
+            .then(() => {
+              setIsGeneratingPdf(false);
+            });
+        } else {
+          // Se o elemento não for encontrado, cancela a operação
+          console.error("Elemento 'pdf-content' não encontrado no DOM.");
+          setIsGeneratingPdf(false);
+        }
+      }, 1000); // 100 milissegundos é um atraso imperceptível para o usuário
+
+      // Limpa o timer se o componente for desmontado (boa prática)
+      return () => clearTimeout(timer);
+    }
+  }, [isGeneratingPdf, osData]); // Roda quando isGeneratingPdf muda
+
+  // A função do botão agora só precisa mudar o estado
+  const handleGeneratePdf = () => {
+    setIsGeneratingPdf(true);
+  };
 
   // --- Funções de Manipulação de Eventos ---
 
@@ -184,39 +230,6 @@ const ChecklistPage = () => {
     }
   };
 
-  // Lida com a geração e abertura do PDF.
-  const handleGeneratePdf = async () => {
-    try {
-      const response = await getPdf(id); // Chama a API, que agora recebe o PDF como anexo
-
-      // Cria uma URL temporária para o arquivo que foi baixado na memória
-      const file = new Blob([response.data], { type: "application/pdf" });
-      const fileURL = URL.createObjectURL(file);
-
-      // --- Lógica para forçar o download ---
-      // 1. Cria um link temporário na memória
-      const link = document.createElement("a");
-
-      // 2. Define a URL do link como a URL do nosso arquivo
-      link.href = fileURL;
-
-      // 3. Define o nome do arquivo que será baixado
-      link.setAttribute("download", `checklist-${osData?.veiculo_modelo}-${osData?.veiculo_placa}.pdf`);
-      // const nomeDoArquivo = `checklist-${osData?.veiculo_mod}-${osData?.veiculo_placa}.pdf`;
-
-      // 4. Adiciona o link ao corpo do documento (necessário para alguns navegadores)
-      document.body.appendChild(link);
-
-      // 5. Simula um clique no link
-      link.click();
-
-      // 6. Remove o link do documento após o clique
-      document.body.removeChild(link);
-    } catch (error) {
-      console.error("Erro ao gerar o PDF:", error);
-      toast.error("Não foi possível gerar o PDF.");
-    }
-  };
   // --- Renderização Condicional ---
 
   // Exibe mensagem de carregamento enquanto os dados estão sendo buscados.
@@ -228,218 +241,237 @@ const ChecklistPage = () => {
 
   // --- Renderização do Componente Principal ---
   return (
-    <>  
-     <Header />
-    <div className="checklist-page teste">
-      {/* Link para voltar à página anterior (lista de OSs). */}
-      <Link to="/home" className="back-link">
-        ← Voltar para a lista
-      </Link>
+    <>
+      <Header />
+      <div className="checklist-page teste">
+        {/* Link para voltar à página anterior (lista de OSs). */}
+        <Link to="/home" className="back-link">
+          ← Voltar para a lista
+        </Link>
 
-      {/* Seção de detalhes da Ordem de Serviço */}
-      <div className="os-details">
-        <h2>Checklist para: {osData.cliente_nome}</h2>
-        <p>Veículo: {osData.veiculo_modelo}</p>
-        <p>Placa: {osData.veiculo_placa}</p>
-        <p>Seguradora: {osData.seguradora_nome || "N/A"}</p>{" "}
-        {/* Mostra "N/A" se não houver seguradora */}
-      </div>
+        {/* Seção de detalhes da Ordem de Serviço */}
+        <div className="os-details">
+          <h2>Checklist para: {osData.cliente_nome}</h2>
+          <p>Veículo: {osData.veiculo_modelo}</p>
+          <p>Placa: {osData.veiculo_placa}</p>
+          <p>Seguradora: {osData.seguradora_nome || "N/A"}</p>{" "}
+          {/* Mostra "N/A" se não houver seguradora */}
+        </div>
 
-      {/* ======================================================= */}
-      {/* 1. FORMULÁRIO DO CHECKLIST */}
-      {/* ======================================================= */}
-      <div className="checklist-form">
-        {/* Mapeia sobre cada item do checklist e renderiza um formulário para ele. */}
-        {checklistItens.map((item) => (
-          <div key={item.id} className="checklist-item">
-            {/* Cabeçalho do item do checklist, alinhando nome e campo de input. */}
-            <div className="item-header">
-              <label className="item-name">
-                {item.ordem}. {item.nome}{" "}
-                {/* Exibe a ordem e o nome do item. */}
-              </label>
+        {/* ======================================================= */}
+        {/* 1. FORMULÁRIO DO CHECKLIST */}
+        {/* ======================================================= */}
+        <div className="checklist-form">
+          {/* Mapeia sobre cada item do checklist e renderiza um formulário para ele. */}
+          {checklistItens.map((item) => (
+            <div key={item.id} className="checklist-item">
+              {/* Cabeçalho do item do checklist, alinhando nome e campo de input. */}
+              <div className="item-header">
+                <label className="item-name">
+                  {item.ordem}. {item.nome}{" "}
+                  {/* Exibe a ordem e o nome do item. */}
+                </label>
 
-              <div className="item-input-area">
-                {/* Renderização condicional baseada no 'tipo' do item. */}
+                <div className="item-input-area">
+                  {/* Renderização condicional baseada no 'tipo' do item. */}
 
-                {/* TIPO: 'options' (Botões de Rádio para Status) */}
-                {item.tipo === "options" && (
-                  <div className="status-options">
-                    {/* Mapeia as opções de status (ex: "ok", "irregular", "não aplicável"). */}
-                    {item.opcoes?.map((statusOption) => (
-                      <label key={statusOption}>
-                        <input
-                          type="radio"
-                          name={`status-${item.id}`} // Nome para agrupar os rádios do mesmo item.
-                          value={statusOption}
-                          checked={respostas[item.id]?.status === statusOption} // Marca o rádio se for a resposta atual.
-                          onChange={(e) =>
-                            handleRespostaChange(
-                              item.id,
-                              "status", // Campo a ser atualizado.
-                              e.target.value // Novo valor.
-                            )
-                          }
-                        />
-                        {/* Exibe a opção com a primeira letra maiúscula. */}
-                        <span>
-                          {statusOption.charAt(0).toUpperCase() +
-                            statusOption.slice(1)}
-                        </span>
-                      </label>
-                    ))}
-                  </div>
-                )}
+                  {/* TIPO: 'options' (Botões de Rádio para Status) */}
+                  {item.tipo === "options" && (
+                    <div className="status-options">
+                      {/* Mapeia as opções de status (ex: "ok", "irregular", "não aplicável"). */}
+                      {item.opcoes?.map((statusOption) => (
+                        <label key={statusOption}>
+                          <input
+                            type="radio"
+                            name={`status-${item.id}`} // Nome para agrupar os rádios do mesmo item.
+                            value={statusOption}
+                            checked={
+                              respostas[item.id]?.status === statusOption
+                            } // Marca o rádio se for a resposta atual.
+                            onChange={(e) =>
+                              handleRespostaChange(
+                                item.id,
+                                "status", // Campo a ser atualizado.
+                                e.target.value // Novo valor.
+                              )
+                            }
+                          />
+                          {/* Exibe a opção com a primeira letra maiúscula. */}
+                          <span>
+                            {statusOption.charAt(0).toUpperCase() +
+                              statusOption.slice(1)}
+                          </span>
+                        </label>
+                      ))}
+                    </div>
+                  )}
 
-                {/* TIPO: 'range' (Slider para Nível de Combustível/Outros Ranges) */}
-                {item.tipo === "range" &&
-                  (() => {
-                    // Lógica para garantir que o valor do slider seja numérico e dentro do range (0-100).
-                    const valorDoBanco = parseInt(
-                      respostas[item.id]?.observacao,
-                      10
-                    );
-                    const valorValido =
-                      !isNaN(valorDoBanco) &&
-                      valorDoBanco >= 0 &&
-                      valorDoBanco <= 100;
-                    const valorDoSlider = valorValido ? valorDoBanco : 50; // Padrão 50% se inválido.
-                    return (
-                      <div className="range-slider-container">
-                        <input
-                          type="range"
-                          min="0"
-                          max="100"
-                          step="2.5" // Passos de 2.5%
-                          className="range-slider"
-                          value={valorDoSlider} // Valor atual do slider.
-                          onChange={(e) =>
-                            handleRespostaChange(
-                              item.id,
-                              "observacao", // Campo 'observacao' é usado para o valor do range.
-                              e.target.value
-                            )
-                          }
-                        />
-                        {/* Exibe o valor percentual ao lado do slider. */}
-                        <span className="range-slider-value">
-                          {valorDoSlider}%
-                        </span>
-                      </div>
-                    );
-                  })()}
+                  {/* TIPO: 'range' (Slider para Nível de Combustível/Outros Ranges) */}
+                  {item.tipo === "range" &&
+                    (() => {
+                      // Lógica para garantir que o valor do slider seja numérico e dentro do range (0-100).
+                      const valorDoBanco = parseInt(
+                        respostas[item.id]?.observacao,
+                        10
+                      );
+                      const valorValido =
+                        !isNaN(valorDoBanco) &&
+                        valorDoBanco >= 0 &&
+                        valorDoBanco <= 100;
+                      const valorDoSlider = valorValido ? valorDoBanco : 50; // Padrão 50% se inválido.
+                      return (
+                        <div className="range-slider-container">
+                          <input
+                            type="range"
+                            min="0"
+                            max="100"
+                            step="2.5" // Passos de 2.5%
+                            className="range-slider"
+                            value={valorDoSlider} // Valor atual do slider.
+                            onChange={(e) =>
+                              handleRespostaChange(
+                                item.id,
+                                "observacao", // Campo 'observacao' é usado para o valor do range.
+                                e.target.value
+                              )
+                            }
+                          />
+                          {/* Exibe o valor percentual ao lado do slider. */}
+                          <span className="range-slider-value">
+                            {valorDoSlider}%
+                          </span>
+                        </div>
+                      );
+                    })()}
 
-                {/* TIPO: 'number' (Campo para Quilometragem/Outros Números) */}
-                {item.tipo === "number" && (
-                  <input
-                    type="number"
-                    className="text-input"
-                    placeholder="Digite o valor..."
-                    value={respostas[item.id]?.observacao || ""} // Usa 'observacao' para o valor numérico.
-                    onChange={(e) =>
-                      handleRespostaChange(
-                        item.id,
-                        "observacao",
-                        e.target.value
-                      )
-                    }
-                  />
-                )}
+                  {/* TIPO: 'number' (Campo para Quilometragem/Outros Números) */}
+                  {item.tipo === "number" && (
+                    <input
+                      type="number"
+                      className="text-input"
+                      placeholder="Digite o valor..."
+                      value={respostas[item.id]?.observacao || ""} // Usa 'observacao' para o valor numérico.
+                      onChange={(e) =>
+                        handleRespostaChange(
+                          item.id,
+                          "observacao",
+                          e.target.value
+                        )
+                      }
+                    />
+                  )}
+                </div>
               </div>
+
+              {/* Área de Observação: aparece APENAS para itens do tipo 'options'. */}
+              {/* Em itens de 'range' ou 'number', a 'observacao' é o próprio valor. */}
+              {item.tipo === "options" && (
+                <textarea
+                  placeholder="Observações..."
+                  value={respostas[item.id]?.observacao || ""} // Garante que é uma string.
+                  onChange={(e) =>
+                    handleRespostaChange(item.id, "observacao", e.target.value)
+                  }
+                />
+              )}
             </div>
+          ))}
+        </div>
 
-            {/* Área de Observação: aparece APENAS para itens do tipo 'options'. */}
-            {/* Em itens de 'range' ou 'number', a 'observacao' é o próprio valor. */}
-            {item.tipo === "options" && (
-              <textarea
-                placeholder="Observações..."
-                value={respostas[item.id]?.observacao || ""} // Garante que é uma string.
-                onChange={(e) =>
-                  handleRespostaChange(item.id, "observacao", e.target.value)
-                }
-              />
-            )}
+        {/* ======================================================= */}
+        {/* 2. SEÇÃO DE FOTOS */}
+        {/* ======================================================= */}
+        <div className="photos-section">
+          <h3>Fotos Anexadas</h3>
+          {/* Condicionalmente renderiza a galeria de fotos se houver fotos na OS. */}
+          {osData?.fotos?.length > 0 ? (
+            <div className="photo-gallery">
+              {/* Mapeia e exibe cada foto anexada. */}
+              {osData.fotos.map((foto) => (
+                <div key={foto.id} className="photo-container">
+                  <img src={`${API_BASE_URL}/${foto.caminho_arquivo}`} />
+                  {/* Botão para deletar a foto. */}
+                  <button
+                    onClick={() => handlePhotoDelete(foto.id)}
+                    className="delete-photo-btn"
+                  >
+                    &times; {/* Caractere 'X' para fechar/deletar. */}
+                  </button>
+                </div>
+              ))}
+            </div>
+          ) : (
+            // Mensagem exibida se não houver fotos.
+            <p>Nenhuma foto anexada a este checklist.</p>
+          )}
+
+          {/* Formulário para upload de novas fotos. */}
+          <div className="upload-form">
+            <h4>Anexar Novas Fotos</h4>
+            <input
+              id="file-input" // ID para limpar o input após o upload.
+              type="file"
+              multiple // Permite selecionar múltiplos arquivos.
+              onChange={handleFileSelect} // Chama a função ao selecionar arquivos.
+              accept="image/png, image/jpeg, image/webp" // Define os tipos de arquivo aceitos.
+            />
+            <button
+              onClick={handlePhotoUpload} // Chama a função para upload.
+              disabled={!selectedFiles || uploading} // Desabilita o botão se não houver arquivos ou se já estiver enviando.
+              className="btn-primary"
+            >
+              {uploading ? "Enviando..." : "Enviar Fotos"}{" "}
+              {/* Texto dinâmico do botão. */}
+            </button>
           </div>
-        ))}
-      </div>
+        </div>
 
-      {/* ======================================================= */}
-      {/* 2. SEÇÃO DE FOTOS */}
-      {/* ======================================================= */}
-      <div className="photos-section">
-        <h3>Fotos Anexadas</h3>
-        {/* Condicionalmente renderiza a galeria de fotos se houver fotos na OS. */}
-        {osData?.fotos?.length > 0 ? (
-          <div className="photo-gallery">
-            {/* Mapeia e exibe cada foto anexada. */}
-            {osData.fotos.map((foto) => (
-              <div key={foto.id} className="photo-container">
-                <img src={foto.caminho_arquivo} alt={`Foto ${foto.id}`} />
-                {/* Botão para deletar a foto. */}
-                <button
-                  onClick={() => handlePhotoDelete(foto.id)}
-                  className="delete-photo-btn"
-                >
-                  &times; {/* Caractere 'X' para fechar/deletar. */}
-                </button>
-              </div>
-            ))}
-          </div>
-        ) : (
-          // Mensagem exibida se não houver fotos.
-          <p>Nenhuma foto anexada a este checklist.</p>
-        )}
-
-        {/* Formulário para upload de novas fotos. */}
-        <div className="upload-form">
-          <h4>Anexar Novas Fotos</h4>
-          <input
-            id="file-input" // ID para limpar o input após o upload.
-            type="file"
-            multiple // Permite selecionar múltiplos arquivos.
-            onChange={handleFileSelect} // Chama a função ao selecionar arquivos.
-            accept="image/png, image/jpeg, image/webp" // Define os tipos de arquivo aceitos.
-          />
+        {/* ======================================================= */}
+        {/* 3. BOTÕES DE AÇÃO PRINCIPAIS */}
+        {/* ======================================================= */}
+        <div className="checklist-actions">
+          {/* Botão para salvar o checklist. */}
+          <button onClick={handleSave} disabled={saving} className="btn-save">
+            {saving ? "Salvando..." : "Salvar Checklist"}
+          </button>
+          {/* Botão para gerar o PDF do checklist. */}
           <button
-            onClick={handlePhotoUpload} // Chama a função para upload.
-            disabled={!selectedFiles || uploading} // Desabilita o botão se não houver arquivos ou se já estiver enviando.
-            className="btn-primary"
+            onClick={handleGeneratePdf}
+            disabled={isGeneratingPdf}
+            className="btn-pdf"
           >
-            {uploading ? "Enviando..." : "Enviar Fotos"}{" "}
-            {/* Texto dinâmico do botão. */}
+            {isGeneratingPdf ? "Gerando..." : "Gerar PDF"}
+          </button>
+          {/* Botão para abrir o modal de coleta de assinatura. */}
+          <button
+            onClick={() => setIsSignatureModalOpen(true)}
+            className="btn-signature"
+          >
+            Coletar Assinatura
           </button>
         </div>
+
+        {/* Renderiza o componente SignaturePad (modal de assinatura) condicionalmente. */}
+        {isSignatureModalOpen && (
+          <SignaturePad
+            onClose={() => setIsSignatureModalOpen(false)} // Função para fechar o modal.
+            onSave={handleSaveSignature} // Função para salvar a assinatura.
+          />
+        )}
       </div>
 
-      {/* ======================================================= */}
-      {/* 3. BOTÕES DE AÇÃO PRINCIPAIS */}
-      {/* ======================================================= */}
-      <div className="checklist-actions">
-        {/* Botão para salvar o checklist. */}
-        <button onClick={handleSave} disabled={saving} className="btn-save">
-          {saving ? "Salvando..." : "Salvar Checklist"}
-        </button>
-        {/* Botão para gerar o PDF do checklist. */}
-        <button onClick={handleGeneratePdf} className="btn-pdf">
-          Gerar PDF
-        </button>
-        {/* Botão para abrir o modal de coleta de assinatura. */}
-        <button
-          onClick={() => setIsSignatureModalOpen(true)}
-          className="btn-signature"
-        >
-          Coletar Assinatura
-        </button>
+      {/* O componente do relatório fica "escondido" aqui,
+          pronto para ser "impresso" pelo html2canvas. */}
+      <div style={{ position: "absolute", left: "-9999px", top: 0 }}>
+        {osData && (
+          <ChecklistReport
+            osData={osData}
+            checklistItens={checklistItens}
+            respostasMap={new Map(Object.entries(respostas))} // Cria o map aqui
+            // logoUrl={logo} // Descomente se tiver o logo
+          />
+        )}
       </div>
-
-      {/* Renderiza o componente SignaturePad (modal de assinatura) condicionalmente. */}
-      {isSignatureModalOpen && (
-        <SignaturePad
-          onClose={() => setIsSignatureModalOpen(false)} // Função para fechar o modal.
-          onSave={handleSaveSignature} // Função para salvar a assinatura.
-        />
-      )}
-    </div>
     </>
   );
 };

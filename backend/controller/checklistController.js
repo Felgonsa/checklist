@@ -1,13 +1,6 @@
 // Importa o módulo 'db.js', que contém a configuração e métodos para interagir com o banco de dados.
 const db = require('../db/db.js');
 
-// Importa classes específicas do SDK da AWS para S3.
-// O 'S3Client' é usado para criar uma instância de cliente S3.
-// 'PutObjectCommand' e 'DeleteObjectCommand' são comandos para operações de upload e exclusão,
-// embora não sejam usados diretamente neste arquivo, a importação sugere que faz parte de um conjunto de arquivos S3.
-const { S3Client, PutObjectCommand, DeleteObjectCommand } = require("@aws-sdk/client-s3");
-
-
 // --- Controller para Itens Padrão do Checklist ---
 
 // Função para buscar todos os itens padrão do checklist.
@@ -30,13 +23,6 @@ const getChecklistItens = async (req, res) => {
 // Inicializa o cliente S3 com as configurações de região e credenciais.
 // Esta parte do código está aqui, mas o cliente 's3' não é usado nas funções abaixo.
 // Pode ser que este arquivo foi consolidado ou parte de um grupo onde 's3' é usado em outras funções.
-const s3 = new S3Client({
-  region: process.env.AWS_REGION, // Região da AWS (ex: 'sa-east-1').
-  credentials: {
-    accessKeyId: process.env.AWS_ACCESS_KEY_ID,     // Chave de acesso da AWS.
-    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY, // Chave secreta da AWS.
-  }
-});
 
 
 // Função para salvar um conjunto de respostas de um checklist para uma Ordem de Serviço específica.

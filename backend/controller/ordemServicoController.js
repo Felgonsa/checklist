@@ -108,23 +108,18 @@ const getOrdensServico = async (req, res) => {
 
 
 
-// Função para atualizar os dados de uma Ordem de Serviço existente.
 const updateOrdemServico = async (req, res) => {
-  // Pega o 'id' da OS dos parâmetros da URL.
   const { id } = req.params;
   const { role, oficina_id } = req.user;
-  // Pega os dados a serem atualizados do corpo da requisição.
   const { cliente_nome, veiculo_placa, veiculo_modelo, seguradora_nome } = req.body;
-  // Verifica se os campos obrigatórios estão presentes.
+
   if (!cliente_nome || !veiculo_placa || !veiculo_modelo) {
-    // Se faltar algum campo obrigatório, retorna um erro 400 (Requisição Inválida).
     return res.status(400).json({ error: 'Nome do cliente, modelo e placa do veículo são obrigatórios.' });
   }
 
   try {
-    // Query SQL para atualizar uma linha na tabela 'ordem_servico'.
-    // 'RETURNING *' faz com que a query retorne a linha atualizada.
-    const query = `
+    // 1. Inicia a query com 'let' e SEM o 'RETURNING *;'
+    let query = `
       UPDATE ordem_servico
       SET
         cliente_nome = $1,
@@ -132,32 +127,30 @@ const updateOrdemServico = async (req, res) => {
         veiculo_modelo = $3,
         seguradora_nome = $4
       WHERE id = $5
-      RETURNING *;
     `;
-    // Valores para a query. Se 'seguradora_nome' for vazio, será tratado como NULL no banco.
-    const values = [cliente_nome, veiculo_placa, veiculo_modelo, seguradora_nome || null, id];
-    // Executa a query de atualização.
+    
+    // 2. Declara 'values' com 'let' para poder modificá-lo
+    let values = [cliente_nome, veiculo_placa, veiculo_modelo, seguradora_nome || null, id];
 
+    // 3. Adiciona a verificação de segurança ANTES de executar a query
     if (role !== 'superadmin') {
-      query += ` AND oficina_id = $6`;
+      // Usa a contagem de 'values' para adicionar o placeholder correto ($6)
+      query += ` AND oficina_id = $${values.length + 1}`;
       values.push(oficina_id);
     }
 
+    // 4. Adiciona o 'RETURNING *;' apenas UMA VEZ, no final
     query += ' RETURNING *;';
 
+    // 5. Executa a query final e segura
     const { rows } = await db.query(query, values);
 
-
-
-    // Se nenhuma linha foi afetada, significa que a OS com o ID não foi encontrada.
     if (rows.length === 0) {
-      return res.status(404).json({ error: 'Ordem de serviço não encontrada.' });
+      return res.status(404).json({ error: 'Ordem de serviço não encontrada ou acesso não permitido.' });
     }
 
-    // Retorna a OS atualizada com status 200 (OK).
     res.status(200).json(rows[0]);
   } catch (error) {
-    // Se ocorrer um erro, loga e envia uma resposta de erro 500.
     console.error(`Erro ao atualizar ordem de serviço ${id}:`, error);
     res.status(500).json({ error: 'Erro interno do servidor.' });
   }

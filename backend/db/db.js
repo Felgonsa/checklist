@@ -1,4 +1,4 @@
-// --- ARQUIVO backend/db/db.js CORRIGIDO ---
+
 
 // Garante que as variáveis de ambiente sejam carregadas ANTES de qualquer outra coisa neste arquivo.
 require('dotenv').config(); 

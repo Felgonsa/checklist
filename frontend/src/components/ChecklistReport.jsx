@@ -1,13 +1,13 @@
 // ARQUIVO: frontend/src/components/ChecklistReport.jsx (CORRIGIDO)
 
-import React from 'react';
 import './ChecklistReport.css';
 // CORREÇÃO: Importa a URL base do seu arquivo de API
-import { API_BASE_URL } from '../services/api'; 
 import header from '../images/header.png'; // Importa o logo se necessário
+
 
 const ChecklistReport = ({ osData, checklistItens, respostasMap }) => {
   if (!osData) return null;
+
 
   return (
 
@@ -44,14 +44,17 @@ const ChecklistReport = ({ osData, checklistItens, respostasMap }) => {
         </div>
       </section>
 
+
+
       {osData.fotos && osData.fotos.length > 0 && (
+        console.log('Fotos para PDF:', osData.fotos), // Log para verificar os dados das fotos
         <section className="photos-section-pdf">
           <h2>Fotos Anexadas</h2>
           <div className="photos-grid-pdf">
             {osData.fotos.map(foto => (
               <div key={foto.id} className="photo-item-pdf">
                 {/* CORREÇÃO: Usa a variável API_BASE_URL para montar a URL da imagem */}
-                <img src={`${API_BASE_URL}/${foto.caminho_arquivo}`} alt={`Foto ${foto.id}`} crossOrigin="anonymous" />
+                <img src={foto.caminho_arquivo} alt={`Foto ${foto.id}`}/>
               </div>
             ))}
           </div>
@@ -62,7 +65,7 @@ const ChecklistReport = ({ osData, checklistItens, respostasMap }) => {
         <section className="signature-section-pdf">
           <h2>Assinatura do Cliente</h2>
           <div className="signature-box">
-            <img src={osData.assinatura_cliente} alt="Assinatura" crossOrigin="anonymous" />
+            <img src={osData.assinatura_cliente} alt="Assinatura"  />
             <div className="signature-line"></div>
             <p>{osData.cliente_nome}</p>
           </div>

@@ -1,16 +1,15 @@
-import React, { useState, useEffect } from "react"; // Importa hooks essenciais do React para estado e efeitos colaterais.
-import { useParams, Link } from "react-router-dom"; // Importa hooks do React Router para acessar parâmetros da URL e navegação.
-import SignaturePad from "../components/SignaturePad"; // Importa um componente personalizado para a assinatura.
-import Header from "../components/Header";
+import { useEffect, useState } from "react"; // Importa hooks essenciais do React para estado e efeitos colaterais.
+import { Link, useParams } from "react-router-dom"; // Importa hooks do React Router para acessar parâmetros da URL e navegação.
 import { toast } from "react-toastify";
+import Header from "../components/Header";
+import SignaturePad from "../components/SignaturePad"; // Importa um componente personalizado para a assinatura.
 import {
-  getOrdemServicoById, // Função para buscar dados de uma OS específica.
-  getItens, // Função para buscar os itens padrão do checklist.
+  deleteFoto, // Função para buscar dados de uma OS específica.
+  getItens,
+  getOrdemServicoById, // URL base da API (para construir a URL do PDF).
+  saveAssinatura, // Função para buscar os itens padrão do checklist.
   saveRespostas, // Função para salvar as respostas do checklist.
-  uploadFotos, // Função para enviar fotos para o servidor/S3.
-  deleteFoto, // Função para deletar fotos.
-  API_BASE_URL, // URL base da API (para construir a URL do PDF).
-  saveAssinatura, // Função para salvar a assinatura.
+  uploadFotos
 } from "../services/api"; // Importa todas as funções de interação com a API de um arquivo de serviços.
 
 import html2pdf from "html2pdf.js";
@@ -79,7 +78,7 @@ const ChecklistPage = () => {
     // Este efeito só roda se isGeneratingPdf for true
     if (isGeneratingPdf) {
       // Adicionamos um pequeno timeout para dar tempo ao navegador de renderizar o componente
-      const timer = setTimeout(() => {
+      const timer = setTimeout(async () => {
         const element = document.getElementById("pdf-content");
 
         if (element) {
@@ -94,13 +93,69 @@ const ChecklistPage = () => {
             jsPDF: { unit: "mm", format: "a4", orientation: "portrait" },
           };
 
-          html2pdf()
-            .from(element)
-            .set(opt)
-            .save()
-            .then(() => {
-              setIsGeneratingPdf(false);
-            });
+          // Verifica se o navegador suporta a Web Share API
+          if (navigator.share) {
+            try {
+              // Para html2pdf.js versão 0.10.3, precisamos usar uma abordagem diferente
+              // Primeiro geramos o PDF e tentamos capturar como blob
+              const pdf = await html2pdf()
+                .from(element)
+                .set(opt)
+                .outputPdf();
+              
+              // Converte a string base64 para blob
+              const base64Data = pdf.split(',')[1];
+              const byteCharacters = atob(base64Data);
+              const byteArrays = [];
+              
+              for (let offset = 0; offset < byteCharacters.length; offset += 512) {
+                const slice = byteCharacters.slice(offset, offset + 512);
+                const byteNumbers = new Array(slice.length);
+                for (let i = 0; i < slice.length; i++) {
+                  byteNumbers[i] = slice.charCodeAt(i);
+                }
+                const byteArray = new Uint8Array(byteNumbers);
+                byteArrays.push(byteArray);
+              }
+              
+              const blob = new Blob(byteArrays, { type: 'application/pdf' });
+              
+              // Cria um arquivo para compartilhar
+              const file = new File([blob], `checklist-carro-${osData?.veiculo_placa || "veiculo"}.pdf`, {
+                type: 'application/pdf'
+              });
+              
+              // Tenta compartilhar o arquivo
+              if (navigator.canShare && navigator.canShare({ files: [file] })) {
+                await navigator.share({
+                  files: [file],
+                  title: `Checklist - ${osData?.veiculo_placa || "Veículo"}`,
+                  text: `Checklist do veículo ${osData?.veiculo_placa || ""}`
+                });
+              } else {
+                // Se não pode compartilhar arquivos, tenta compartilhar texto
+                await navigator.share({
+                  title: `Checklist - ${osData?.veiculo_placa || "Veículo"}`,
+                  text: `Checklist do veículo ${osData?.veiculo_placa || ""}. O PDF foi gerado e está pronto para download.`
+                });
+              }
+            } catch (error) {
+              console.error('Erro ao compartilhar PDF:', error);
+              // Se falhar o compartilhamento, faz download normal
+              html2pdf()
+                .from(element)
+                .set(opt)
+                .save();
+            }
+          } else {
+            // Navegador não suporta Web Share API, faz download normal
+            html2pdf()
+              .from(element)
+              .set(opt)
+              .save();
+          }
+          
+          setIsGeneratingPdf(false);
         } else {
           // Se o elemento não for encontrado, cancela a operação
           console.error("Elemento 'pdf-content' não encontrado no DOM.");
@@ -389,7 +444,7 @@ const ChecklistPage = () => {
               {/* Mapeia e exibe cada foto anexada. */}
               {osData.fotos.map((foto) => (
                 <div key={foto.id} className="photo-container">
-                  <img src={`${API_BASE_URL}/${foto.caminho_arquivo}`} />
+                  <img src={`${foto.caminho_arquivo}`} />
                   {/* Botão para deletar a foto. */}
                   <button
                     onClick={() => handlePhotoDelete(foto.id)}

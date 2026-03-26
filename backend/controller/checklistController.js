@@ -7,9 +7,22 @@ const db = require('../db/db.js');
 // Estes itens são a estrutura fixa do checklist que será preenchida.
 const getChecklistItens = async (req, res) => {
   try {
-    // Executa uma query para selecionar todos os itens da tabela 'checklist_item'.
-    // Os itens são ordenados pela coluna 'ordem' para garantir uma sequência lógica.
-    const { rows } = await db.query('SELECT * FROM checklist_item ORDER BY ordem');
+    const { role, oficina_id } = req.user;
+    
+    let query;
+    let values = [];
+    
+    if (role === 'superadmin') {
+      // Superadmin pode ver todos os itens de todas as oficinas
+      query = 'SELECT * FROM checklist_item ORDER BY ordem';
+    } else {
+      // Usuários normais só podem ver os itens da sua própria oficina
+      query = 'SELECT * FROM checklist_item WHERE oficina_id = $1 ORDER BY ordem';
+      values = [oficina_id];
+    }
+    
+    // Executa a query para selecionar os itens da tabela 'checklist_item'.
+    const { rows } = await db.query(query, values);
     // Retorna os itens encontrados como um array JSON com status 200 (OK).
     res.status(200).json(rows);
   } catch (error) {
@@ -65,6 +78,19 @@ const saveChecklistRespostas = async (req, res) => {
     for (const resposta of respostas) {
       // Extrai os dados de cada resposta individual.
       const { item_id, status, observacao } = resposta;
+
+      // Verifica se o item_id pertence à oficina do usuário (exceto para superadmin)
+      if (role !== 'superadmin') {
+        const itemCheck = await client.query(
+          'SELECT oficina_id FROM checklist_item WHERE id = $1',
+          [item_id]
+        );
+        if (itemCheck.rows.length === 0 || itemCheck.rows[0].oficina_id !== oficina_id) {
+          await client.query('ROLLBACK');
+          client.release();
+          return res.status(403).json({ error: 'Acesso proibido. Item não pertence à sua oficina.' });
+        }
+      }
 
       // Define a query SQL para inserir uma nova resposta no banco de dados.
       const query = `

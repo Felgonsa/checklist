@@ -2,10 +2,6 @@
 // Este módulo é responsável por configurar e gerenciar a conexão com o banco de dados.
 const db = require('../db/db.js');
 
-// Importa o módulo 'fs' (File System) nativo do Node.js.
-// Ele é usado para interagir com o sistema de arquivos, como verificar a existência de um arquivo.
-const fs = require('fs');
-
 // Importa a biblioteca 'pdfkit'.
 // Esta biblioteca é utilizada para gerar documentos PDF de forma programática.
 const PDFDocument = require('pdfkit');
@@ -54,9 +50,33 @@ const generatePdf = async (req, res) => {
     // Armazena os dados da ordem de serviço encontrada (a primeira linha do resultado).
     const osData = osResult.rows[0];
 
-    // Consulta a tabela 'checklist_item' para obter todos os itens do checklist.
-    // Ordena os itens pela coluna 'ordem' para garantir a sequência correta no PDF.
-    const itensResult = await db.query('SELECT * FROM checklist_item ORDER BY ordem');
+    // Buscar dados da oficina para o cabeçalho dinâmico
+    let oficinaData = null;
+    if (osData.oficina_id) {
+      const oficinaResult = await db.query(
+        'SELECT nome_fantasia, cnpj, telefone, email FROM oficinas WHERE id = $1',
+        [osData.oficina_id]
+      );
+      if (oficinaResult.rows.length > 0) {
+        oficinaData = oficinaResult.rows[0];
+      }
+    }
+
+    // Consulta a tabela 'checklist_item' para obter os itens do checklist.
+    // Filtra por oficina_id para garantir isolamento por tenant, exceto para superadmin.
+    let itensQuery;
+    let itensValues = [];
+    
+    if (role === 'superadmin') {
+      // Superadmin pode ver todos os itens de todas as oficinas
+      itensQuery = 'SELECT * FROM checklist_item ORDER BY ordem';
+    } else {
+      // Usuários normais só podem ver os itens da sua própria oficina
+      itensQuery = 'SELECT * FROM checklist_item WHERE oficina_id = $1 ORDER BY ordem';
+      itensValues = [oficina_id];
+    }
+    
+    const itensResult = await db.query(itensQuery, itensValues);
 
     // Consulta a tabela 'checklist_resposta' para obter as respostas específicas para esta OS.
     const respostasResult = await db.query('SELECT * FROM checklist_resposta WHERE os_id = $1', [id]);
@@ -127,16 +147,53 @@ const generatePdf = async (req, res) => {
 
     // --- ETAPA 4: ADICIONAR CONTEÚDO AO PDF ---
 
-    // --- Cabeçalho do Documento ---
-
+    // --- Cabeçalho Dinâmico da Oficina ---
     
-    if (fs.existsSync('header.png')) {
-      doc.image('header.png', 0,0, {
-        width: (doc.page.width)
-      });
-      doc.y = 150;
+    // Se houver dados da oficina, adiciona o cabeçalho dinâmico
+    if (oficinaData) {
+      // Nome fantasia da oficina (título principal)
+      doc.fontSize(20)
+        .font('Helvetica-Bold')
+        .text(oficinaData.nome_fantasia, { align: 'center' });
+      
+      doc.moveDown(0.5);
+      
+      // Informações de contato (CNPJ, telefone, email)
+      doc.fontSize(10)
+        .font('Helvetica')
+        .fillColor('#555555'); // Cor cinza escuro
+      
+      // Formata os dados de contato
+      const contatoInfo = [];
+      if (oficinaData.cnpj) {
+        contatoInfo.push(`CNPJ: ${oficinaData.cnpj}`);
+      }
+      if (oficinaData.telefone) {
+        contatoInfo.push(`Telefone: ${oficinaData.telefone}`);
+      }
+      if (oficinaData.email) {
+        contatoInfo.push(`Email: ${oficinaData.email}`);
+      }
+      
+      if (contatoInfo.length > 0) {
+        doc.text(contatoInfo.join(' | '), { align: 'center' });
+      }
+      
+      doc.fillColor('black'); // Restaura cor preta
+      doc.moveDown(1);
+      
+      // Linha horizontal separadora
+      const lineY = doc.y;
+      const margin = 50;
+      doc.strokeColor('#cccccc')
+        .lineWidth(1)
+        .moveTo(margin, lineY)
+        .lineTo(doc.page.width - margin, lineY)
+        .stroke();
+      
+      doc.moveDown(1.5);
     }
-
+    
     // Adiciona o título principal do documento.
     doc.fontSize(20) // Define o tamanho da fonte.
       .font('Helvetica-Bold') // Define a fonte como Helvetica em negrito.

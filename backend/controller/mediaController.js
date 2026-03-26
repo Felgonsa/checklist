@@ -1,15 +1,14 @@
 // Importa o módulo 'db.js', que é responsável pela conexão e operações com o banco de dados.
 const db = require('../db/db.js');
+const { createClient } = require('@supabase/supabase-js');
+const { v4: uuidv4 } = require('uuid');
+const fs = require('fs');
+const path = require('path');
 
-// Importa classes específicas do SDK da AWS para S3.
-// 'S3Client' é o cliente principal para interagir com o S3.
-// 'PutObjectCommand' é usado para enviar (upload) objetos para um bucket S3.
-// 'DeleteObjectCommand' é usado para remover objetos de um bucket S3.
-
-// Importa o módulo 'crypto' nativo do Node.js.
-// Ele é usado para gerar nomes de arquivos aleatórios e únicos, garantindo que não haja colisões no S3.
-const crypto = require('crypto');
-
+// Inicializa o cliente Supabase
+const supabaseUrl = process.env.SUPABASE_URL;
+const supabaseAnonKey = process.env.SUPABASE_ANON_KEY;
+const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
 const uploadFotos = async (req, res) => {
   const { os_id } = req.body;
@@ -20,9 +19,35 @@ const uploadFotos = async (req, res) => {
   try {
     const fotosSalvas = [];
     for (const file of files) {
-      // Salva o caminho local do arquivo no banco de dados
+      // Gera um nome único para o arquivo
+      const fileExtension = path.extname(file.originalname);
+      const fileName = `${uuidv4()}${fileExtension}`;
+      const filePath = `fotos-checklist/${fileName}`;
+      
+      // Faz upload para o Supabase Storage
+      const { data, error } = await supabase.storage
+        .from('fotos-checklist')
+        .upload(filePath, file.buffer, {
+          contentType: file.mimetype,
+          cacheControl: '3600',
+          upsert: false
+        });
+      
+      if (error) {
+        console.error('Erro ao fazer upload para Supabase:', error);
+        throw error;
+      }
+      
+      // Obtém a URL pública do arquivo
+      const { data: publicUrlData } = supabase.storage
+        .from('fotos-checklist')
+        .getPublicUrl(filePath);
+      
+      const publicUrl = publicUrlData.publicUrl;
+      
+      // Salva a URL pública no banco de dados
       const query = 'INSERT INTO checklist_foto (os_id, caminho_arquivo) VALUES ($1, $2) RETURNING *;';
-      const { rows } = await db.query(query, [os_id, file.path]);
+      const { rows } = await db.query(query, [os_id, publicUrl]);
       fotosSalvas.push(rows[0]);
     }
     res.status(201).json({ message: 'Fotos enviadas com sucesso!', data: fotosSalvas });
@@ -34,7 +59,7 @@ const uploadFotos = async (req, res) => {
 
 
 
-// Função assíncrona para deletar uma foto do S3 e remover seu registro do banco de dados.
+// Função assíncrona para deletar uma foto do Supabase Storage e remover seu registro do banco de dados.
 const deleteFoto = async (req, res) => {
   const { foto_id } = req.params;
   try {
@@ -42,14 +67,28 @@ const deleteFoto = async (req, res) => {
     if (pathResult.rows.length === 0) {
       return res.status(404).json({ error: 'Foto não encontrada.' });
     }
-    const caminho = pathResult.rows[0].caminho_arquivo;
-
+    const publicUrl = pathResult.rows[0].caminho_arquivo;
+    
+    // Extrai o caminho do arquivo da URL pública do Supabase
+    // A URL é algo como: https://zhdclfhctivfuhfcqhyq.supabase.co/storage/v1/object/public/fotos-checklist/uuid.jpg
+    // Precisamos extrair: fotos-checklist/uuid.jpg
+    const urlParts = publicUrl.split('/');
+    const bucketName = urlParts[urlParts.length - 2]; // fotos-checklist
+    const fileName = urlParts[urlParts.length - 1]; // uuid.jpg
+    const filePath = `${bucketName}/${fileName}`;
+    
+    // Deleta o arquivo do Supabase Storage
+    const { error: storageError } = await supabase.storage
+      .from(bucketName)
+      .remove([fileName]);
+    
+    if (storageError) {
+      console.error('Erro ao deletar arquivo do Supabase Storage:', storageError);
+      // Continua mesmo com erro para deletar do banco de dados
+    }
+    
+    // Deleta o registro do banco de dados
     await db.query('DELETE FROM checklist_foto WHERE id = $1', [foto_id]);
-
-    // Deleta o arquivo físico do servidor
-    fs.unlink(caminho, (err) => {
-      if (err) console.error(`Erro ao deletar arquivo físico ${caminho}:`, err);
-    });
 
     res.status(200).json({ message: 'Foto deletada com sucesso.' });
   } catch (error) {

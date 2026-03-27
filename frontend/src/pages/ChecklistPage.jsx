@@ -149,7 +149,45 @@ const ChecklistPage = () => {
         URL.revokeObjectURL(preview.url);
       });
     };
- console.error("Falha ao forçar o Web Share. Acionando download:", error);
+  }, [photoPreviews]);
+
+  // Função 1: Preparar o PDF (trabalho pesado assíncrono)
+  const prepararPdf = async () => {
+    setIsGeneratingPdf(true);
+    try {
+      const response = await getPdf(id);
+      const file = new File([response.data], `Checklist_OS_${osData?.id || id}.pdf`, { type: 'application/pdf' });
+      setPdfFile(file);
+      toast.success("PDF preparado com sucesso!");
+    } catch (error) {
+      console.error("Erro ao preparar PDF:", error);
+      toast.error("Erro ao buscar o PDF no servidor.");
+    } finally {
+      setIsGeneratingPdf(false);
+    }
+  };
+
+  // Função 2: Compartilhar PDF (ação instantânea)
+  const compartilharPdf = async () => {
+    if (!pdfFile) return;
+
+    // Verifica apenas se a API de share básica existe (ignora o canShare restritivo)
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          files: [pdfFile],
+          title: `Checklist OS`,
+          text: `Segue o checklist da ordem de serviço.`
+        });
+        console.log('Compartilhamento nativo acionado com sucesso.');
+      } catch (error) {
+        // Se o usuário abriu a gaveta do WhatsApp e fechou, não faça nada.
+        if (error.name === 'AbortError') {
+          console.log('Ação cancelada pelo usuário na interface do celular.');
+          return;
+        }
+        // Se o celular realmente rejeitar o arquivo ou não suportar, faz o download.
+        console.error("Falha ao forçar o Web Share. Acionando download:", error);
         baixarPdf();
       }
     } else {

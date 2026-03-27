@@ -47,7 +47,6 @@ const ChecklistReport = ({ osData, checklistItens, respostasMap }) => {
 
 
       {osData.fotos && osData.fotos.length > 0 && (
-        console.log('Fotos para PDF:', osData.fotos), // Log para verificar os dados das fotos
         <section className="photos-section-pdf">
           <h2>Fotos Anexadas</h2>
           <div className="photos-grid-pdf">

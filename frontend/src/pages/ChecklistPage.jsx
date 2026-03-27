@@ -31,6 +31,23 @@ const ChecklistPage = () => {
   const [uploading, setUploading] = useState(false); // Indica se as fotos estão sendo enviadas.
   const [isSignatureModalOpen, setIsSignatureModalOpen] = useState(false); // Controla a visibilidade do modal de assinatura.
   const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
+  const [pendingPhotos, setPendingPhotos] = useState([]); // Fotos capturadas/selecionadas em memória (ainda não enviadas)
+  const [photoPreviews, setPhotoPreviews] = useState([]); // URLs de preview das fotos em memória
+
+  // Carrega rascunho do localStorage na montagem do componente
+  useEffect(() => {
+    const savedDraft = localStorage.getItem(`checklist_rascunho_${id}`);
+    if (savedDraft) {
+      try {
+        const draftData = JSON.parse(savedDraft);
+        if (draftData.respostas) {
+          setRespostas(draftData.respostas);
+        }
+      } catch (err) {
+        console.error("Erro ao carregar rascunho do localStorage:", err);
+      }
+    }
+  }, [id]); // Executa apenas na montagem
 
   // Hook `useEffect` para buscar os dados iniciais da OS e dos itens do checklist.
   // Ele é executado uma vez quando o componente é montado e sempre que o 'id' muda.
@@ -62,7 +79,44 @@ const ChecklistPage = () => {
             observacao: resposta.observacao || "", // Garante que observacao seja string vazia se for null/undefined.
           };
         });
-        setRespostas(respostasIniciais); // Define as respostas iniciais no estado.
+
+        // Mescla as respostas: mantém o rascunho do localStorage, mas sobrescreve com dados da API
+        // quando a API tem dados salvos (não vazios)
+        setRespostas(prevRespostas => {
+          const mergedRespostas = { ...prevRespostas };
+          let rascunhoAplicado = false;
+          
+          // Para cada item do checklist
+          itensResponse.data.forEach((item) => {
+            const itemId = item.id;
+            const respostaApi = respostasIniciais[itemId];
+            const respostaLocal = prevRespostas[itemId];
+            
+            // Verifica se a API tem dados salvos (status ou observacao não vazios)
+            const apiTemDados = respostaApi && 
+              (respostaApi.status !== "" || respostaApi.observacao !== "");
+            
+            // Se a API tem dados salvos, usa os dados da API
+            // Caso contrário, mantém o rascunho local se existir
+            if (apiTemDados) {
+              mergedRespostas[itemId] = respostaApi;
+            } else if (respostaLocal) {
+              // Mantém o rascunho local se a API não tem dados
+              mergedRespostas[itemId] = respostaLocal;
+              rascunhoAplicado = true;
+            } else {
+              // Se não tem nem API nem local, usa os valores padrão
+              mergedRespostas[itemId] = { status: "", observacao: "" };
+            }
+          });
+          
+          // Mostra notificação apenas se algum rascunho local foi aplicado
+          if (rascunhoAplicado) {
+            toast.info("Rascunho do checklist restaurado do armazenamento local.");
+          }
+          
+          return mergedRespostas;
+        });
       } catch (err) {
         // Em caso de erro na busca de dados, define a mensagem de erro.
         setError("Falha ao carregar os dados do checklist.");
@@ -73,6 +127,28 @@ const ChecklistPage = () => {
     };
     fetchData(); // Chama a função assíncrona para buscar os dados.
   }, [id]); // O efeito é re-executado se o 'id' da OS mudar.
+
+  // Auto-save para localStorage: salva as respostas sempre que mudam
+  useEffect(() => {
+    if (Object.keys(respostas).length > 0) {
+      const draftData = {
+        osId: id,
+        respostas,
+        timestamp: new Date().toISOString()
+      };
+      localStorage.setItem(`checklist_rascunho_${id}`, JSON.stringify(draftData));
+    }
+  }, [respostas, id]);
+
+  // Cleanup effect para revocar ObjectURLs quando o componente desmontar
+  useEffect(() => {
+    return () => {
+      // Revoga todas as URLs de preview para evitar vazamentos de memória
+      photoPreviews.forEach(preview => {
+        URL.revokeObjectURL(preview.url);
+      });
+    };
+  }, [photoPreviews]);
 
   useEffect(() => {
     // Este efeito só roda se isGeneratingPdf for true
@@ -96,7 +172,7 @@ const ChecklistPage = () => {
           // Verifica se o navegador suporta a Web Share API
           if (navigator.share) {
             try {
-              // Para html2pdf.js versão 0.10.3, precisamos usar uma abordagem diferente
+              // Para html2pdf.js versão 0.10.3, precisamos usar uma abordagem diferentes
               // Primeiro geramos o PDF e tentamos capturar como blob
               const pdf = await html2pdf()
                 .from(element)
@@ -203,6 +279,9 @@ const ChecklistPage = () => {
         respostas: respostasParaSalvar,
       });
       toast.success("Checklist salvo com sucesso!"); // Exibe um alerta de sucesso.
+      
+      // Limpa o rascunho do localStorage após salvar com sucesso
+      localStorage.removeItem(`checklist_rascunho_${id}`);
     } catch (err) {
       toast.error("Erro ao salvar o checklist."); // Exibe um alerta de erro.
       console.error(err); // Loga o erro no console.
@@ -213,22 +292,44 @@ const ChecklistPage = () => {
 
   // Lida com a seleção de arquivos de foto pelo usuário.
   const handleFileSelect = (event) => {
-    setSelectedFiles(event.target.files); // Armazena os arquivos selecionados no estado.
+    const files = event.target.files;
+    if (!files || files.length === 0) return;
+    
+    // Cria previews das fotos usando URL.createObjectURL
+    const newPreviews = [];
+    const newPendingPhotos = [];
+    
+    for (let i = 0; i < files.length; i++) {
+      const file = files[i];
+      const previewUrl = URL.createObjectURL(file);
+      newPreviews.push({
+        id: `pending-${Date.now()}-${i}`, // ID temporário
+        url: previewUrl,
+        file: file
+      });
+      newPendingPhotos.push(file);
+    }
+    
+    setPhotoPreviews(prev => [...prev, ...newPreviews]);
+    setPendingPhotos(prev => [...prev, ...newPendingPhotos]);
+    
+    // Limpa o input para permitir nova seleção
+    event.target.value = null;
   };
 
   // Lida com o upload das fotos selecionadas.
   const handlePhotoUpload = async () => {
-    // Validação: verifica se algum arquivo foi selecionado.
-    if (!selectedFiles || selectedFiles.length === 0) {
-      toast.warning("Por favor, selecione ao menos um arquivo.");
+    // Validação: verifica se há fotos pendentes para upload.
+    if (pendingPhotos.length === 0) {
+      toast.warning("Por favor, selecione ao menos uma foto.");
       return;
     }
     setUploading(true); // Ativa o estado de upload.
     const formData = new FormData(); // Cria um objeto FormData para enviar os arquivos.
     formData.append("os_id", id); // Adiciona o ID da OS ao FormData.
-    // Itera sobre os arquivos selecionados e os adiciona ao FormData com a chave 'fotos'.
-    for (let i = 0; i < selectedFiles.length; i++) {
-      formData.append("fotos", selectedFiles[i]);
+    // Itera sobre as fotos pendentes e as adiciona ao FormData com a chave 'fotos'.
+    for (let i = 0; i < pendingPhotos.length; i++) {
+      formData.append("fotos", pendingPhotos[i]);
     }
     try {
       // Chama a função da API para fazer o upload das fotos.
@@ -238,14 +339,44 @@ const ChecklistPage = () => {
         ...prevData,
         fotos: [...prevData.fotos, ...response.data.data], // Adiciona as fotos retornadas pela API.
       }));
-      setSelectedFiles(null); // Limpa os arquivos selecionados do estado.
-      document.getElementById("file-input").value = null; // Limpa o valor do input de arquivo para permitir novo upload.
+      
+      // Libera as URLs de preview antes de limpar os estados
+      photoPreviews.forEach(preview => {
+        URL.revokeObjectURL(preview.url);
+      });
+      
+      // Limpa as fotos pendentes e previews
+      setPendingPhotos([]);
+      setPhotoPreviews([]);
+      setSelectedFiles(null);
+      
       toast.success("Fotos enviadas com sucesso!"); // Exibe um alerta de sucesso.
     } catch (err) {
       toast.error("Erro ao enviar fotos."); // Exibe um alerta de erro.
       console.error(err); // Loga o erro no console.
     } finally {
       setUploading(false); // Desativa o estado de upload.
+    }
+  };
+
+  // Lida com a exclusão de uma foto pendente (em memória)
+  const handlePendingPhotoDelete = (previewId) => {
+    const previewIndex = photoPreviews.findIndex(p => p.id === previewId);
+    if (previewIndex === -1) return;
+    
+    // Libera a URL do objeto
+    URL.revokeObjectURL(photoPreviews[previewIndex].url);
+    
+    // Remove a foto dos estados
+    const updatedPreviews = photoPreviews.filter(p => p.id !== previewId);
+    const updatedPendingPhotos = pendingPhotos.filter((_, index) => index !== previewIndex);
+    
+    setPhotoPreviews(updatedPreviews);
+    setPendingPhotos(updatedPendingPhotos);
+    
+    // Atualiza selectedFiles se necessário
+    if (updatedPendingPhotos.length === 0) {
+      setSelectedFiles(null);
     }
   };
 
@@ -447,6 +578,7 @@ const ChecklistPage = () => {
                   <img src={`${foto.caminho_arquivo}`} />
                   {/* Botão para deletar a foto. */}
                   <button
+                    type="button"
                     onClick={() => handlePhotoDelete(foto.id)}
                     className="delete-photo-btn"
                   >
@@ -460,23 +592,87 @@ const ChecklistPage = () => {
             <p>Nenhuma foto anexada a este checklist.</p>
           )}
 
+          {/* Seção de fotos pendentes (em memória) */}
+          {photoPreviews.length > 0 && (
+            <div className="pending-photos-section">
+              <h4>Fotos Pendentes ({photoPreviews.length})</h4>
+              <p className="pending-photos-info">
+                Estas fotos estão armazenadas localmente e serão enviadas quando você clicar em "Enviar Fotos".
+              </p>
+              <div className="photo-gallery">
+                {photoPreviews.map((preview) => (
+                  <div key={preview.id} className="photo-container pending">
+                    <img src={preview.url} alt="Preview" />
+                    {/* Botão para deletar a foto pendente. */}
+                    <button
+                      type="button"
+                      onClick={() => handlePendingPhotoDelete(preview.id)}
+                      className="delete-photo-btn"
+                    >
+                      &times;
+                    </button>
+                    <div className="pending-badge">Pendente</div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
           {/* Formulário para upload de novas fotos. */}
           <div className="upload-form">
             <h4>Anexar Novas Fotos</h4>
+            
+            {/* Inputs ocultos para upload de fotos */}
             <input
-              id="file-input" // ID para limpar o input após o upload.
+              id="camera-input"
               type="file"
-              multiple // Permite selecionar múltiplos arquivos.
-              onChange={handleFileSelect} // Chama a função ao selecionar arquivos.
-              accept="image/png, image/jpeg, image/webp" // Define os tipos de arquivo aceitos.
+              accept="image/*"
+              capture="environment" // Força a câmera traseira em dispositivos móveis
+              multiple
+              onChange={handleFileSelect}
+              style={{ display: 'none' }}
             />
+            <input
+              id="gallery-input"
+              type="file"
+              accept="image/*"
+              multiple
+              onChange={handleFileSelect}
+              style={{ display: 'none' }}
+            />
+            
+            {/* Botões estilizados para acionar os inputs */}
+            <div className="upload-buttons">
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.preventDefault();
+                  document.getElementById('camera-input').click();
+                }}
+                className="btn-camera"
+              >
+                📷 Tirar Foto
+              </button>
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.preventDefault();
+                  document.getElementById('gallery-input').click();
+                }}
+                className="btn-gallery"
+              >
+                🖼️ Selecionar da Galeria
+              </button>
+            </div>
+            
+            {/* Botão para enviar as fotos selecionadas */}
             <button
-              onClick={handlePhotoUpload} // Chama a função para upload.
-              disabled={!selectedFiles || uploading} // Desabilita o botão se não houver arquivos ou se já estiver enviando.
-              className="btn-primary"
+              type="button"
+              onClick={handlePhotoUpload}
+              disabled={pendingPhotos.length === 0 || uploading}
+              className="btn-primary upload-submit-btn"
             >
-              {uploading ? "Enviando..." : "Enviar Fotos"}{" "}
-              {/* Texto dinâmico do botão. */}
+              {uploading ? "Enviando..." : `Enviar Fotos (${pendingPhotos.length})`}
             </button>
           </div>
         </div>
@@ -486,11 +682,17 @@ const ChecklistPage = () => {
         {/* ======================================================= */}
         <div className="checklist-actions">
           {/* Botão para salvar o checklist. */}
-          <button onClick={handleSave} disabled={saving} className="btn-save">
+          <button 
+            type="button"
+            onClick={handleSave} 
+            disabled={saving} 
+            className="btn-save"
+          >
             {saving ? "Salvando..." : "Salvar Checklist"}
           </button>
           {/* Botão para gerar o PDF do checklist. */}
           <button
+            type="button"
             onClick={handleGeneratePdf}
             disabled={isGeneratingPdf}
             className="btn-pdf"
@@ -499,6 +701,7 @@ const ChecklistPage = () => {
           </button>
           {/* Botão para abrir o modal de coleta de assinatura. */}
           <button
+            type="button"
             onClick={() => setIsSignatureModalOpen(true)}
             className="btn-signature"
           >

@@ -29,7 +29,6 @@ const pool = new Pool({
 });
 
 pool.on('connect', () => {
-  console.log('Conexão com o banco de dados PostgreSQL estabelecida com sucesso!');
 });
 
 pool.on('error', (err) => {

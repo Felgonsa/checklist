@@ -31,6 +31,7 @@ const ChecklistPage = () => {
   const [uploading, setUploading] = useState(false); // Indica se as fotos estão sendo enviadas.
   const [isSignatureModalOpen, setIsSignatureModalOpen] = useState(false); // Controla a visibilidade do modal de assinatura.
   const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
+  const [pdfFile, setPdfFile] = useState(null); // Estado para armazenar o arquivo PDF preparado
   const [pendingPhotos, setPendingPhotos] = useState([]); // Fotos capturadas/selecionadas em memória (ainda não enviadas)
   const [photoPreviews, setPhotoPreviews] = useState([]); // URLs de preview das fotos em memória
 
@@ -148,56 +149,37 @@ const ChecklistPage = () => {
         URL.revokeObjectURL(preview.url);
       });
     };
-  }, [photoPreviews]);
-
-  // Função para gerar e compartilhar/download do PDF
-  const handleGeneratePdf = async () => {
-    setIsGeneratingPdf(true);
-    let blobData = null; // Declarado fora para sobreviver no catch
-
-    try {
-      const response = await getPdf(id);
-      blobData = response.data;
-
-      const file = new File([blobData], `Checklist_OS_${osData?.id || id}.pdf`, { type: 'application/pdf' });
-
-      if (navigator.canShare && navigator.canShare({ files: [file] })) {
-        try {
-          await navigator.share({
-            files: [file],
-            title: `Checklist OS ${osData?.id || id}`,
-            text: `Segue o checklist da ordem de serviço do veículo ${osData?.veiculo_modelo || ''}.`
-          });
-          console.log('Compartilhado com sucesso.');
-          return; // Sai da função se o share deu certo
-        } catch (shareError) {
-          if (shareError.name === 'AbortError') {
-            console.log('Compartilhamento cancelado pelo usuário.');
-            return;
-          }
-          console.log('Share bloqueado por timeout/permissão, forçando download.', shareError);
-          // Se o share falhou por segurança do Android, o código segue reto para o fallback de download
-        }
+ console.error("Falha ao forçar o Web Share. Acionando download:", error);
+        baixarPdf();
       }
-      
-      // Fallback: Se não suporta share ou falhou no bloco acima
-      if (blobData) {
-        const url = URL.createObjectURL(blobData);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = `Checklist_OS_${osData?.id || id}.pdf`;
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        URL.revokeObjectURL(url);
-      }
-
-    } catch (error) {
-      console.error("Erro na API ao gerar PDF:", error);
-      alert("Erro ao buscar o PDF no servidor. Tente novamente.");
-    } finally {
-      setIsGeneratingPdf(false);
+    } else {
+      // Fallback limpo para Desktop (Windows/Mac sem suporte a share)
+      console.log('Web Share não suportado no navegador. Baixando arquivo.');
+      baixarPdf();
     }
+  };
+
+  // Função 3: Baixar PDF (fallback)
+  const baixarPdf = () => {
+    if (!pdfFile) {
+      toast.warning("Por favor, prepare o PDF primeiro.");
+      return;
+    }
+
+    const url = URL.createObjectURL(pdfFile);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = pdfFile.name;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  };
+
+  // Função para limpar o PDF preparado
+  const limparPdf = () => {
+    setPdfFile(null);
+    toast.info("PDF limpo. Você pode gerar um novo.");
   };
 
 
@@ -642,15 +624,46 @@ const ChecklistPage = () => {
           >
             {saving ? "Salvando..." : "Salvar Checklist"}
           </button>
-          {/* Botão para gerar o PDF do checklist. */}
-          <button
-            type="button"
-            onClick={handleGeneratePdf}
-            disabled={isGeneratingPdf}
-            className="btn-pdf"
-          >
-            {isGeneratingPdf ? "Gerando..." : "Gerar PDF"}
-          </button>
+          
+          {/* Renderização condicional para botões de PDF */}
+          {!pdfFile ? (
+            // Se não tem PDF preparado: botão para preparar
+            <button
+              type="button"
+              onClick={prepararPdf}
+              disabled={isGeneratingPdf}
+              className="btn-pdf"
+            >
+              {isGeneratingPdf ? "Preparando PDF..." : "Gerar PDF"}
+            </button>
+          ) : (
+            // Se tem PDF preparado: botões de compartilhar e baixar
+            <div className="pdf-actions-container">
+              <button
+                type="button"
+                onClick={compartilharPdf}
+                className="btn-share"
+              >
+                📱 Compartilhar
+              </button>
+              <button
+                type="button"
+                onClick={baixarPdf}
+                className="btn-download"
+              >
+                ⬇️ Baixar PDF
+              </button>
+              <button
+                type="button"
+                onClick={limparPdf}
+                className="btn-clear-pdf"
+                title="Limpar PDF"
+              >
+                ×
+              </button>
+            </div>
+          )}
+          
           {/* Botão para abrir o modal de coleta de assinatura. */}
           <button
             type="button"

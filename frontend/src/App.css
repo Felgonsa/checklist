@@ -619,6 +619,94 @@ body {
   border-top: 1px solid var(--cor-borda);
 }
 
+/* Container para ações de PDF quando preparado */
+.pdf-actions-container {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+/* Botão de compartilhar (WhatsApp verde) */
+.btn-share {
+  padding: 10px 20px;
+  margin: 0;
+  border: none;
+  border-radius: 6px;
+  font-size: 16px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s, transform 0.1s;
+  background-color: #25D366; /* Verde WhatsApp */
+  color: white;
+}
+
+.btn-share:hover {
+  background-color: #1da851;
+  transform: translateY(-1px);
+}
+
+/* Botão de download (azul tradicional) */
+.btn-download {
+  padding: 10px 20px;
+  margin: 0;
+  border: none;
+  border-radius: 6px;
+  font-size: 16px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s, transform 0.1s;
+  background-color: #007bff; /* Azul tradicional */
+  color: white;
+}
+
+.btn-download:hover {
+  background-color: #0056b3;
+  transform: translateY(-1px);
+}
+
+/* Botão de limpar PDF (pequeno/X) */
+.btn-clear-pdf {
+  padding: 8px 12px;
+  margin: 0;
+  border: none;
+  border-radius: 6px;
+  font-size: 18px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: background-color 0.2s, transform 0.1s;
+  background-color: #6c757d;
+  color: white;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.btn-clear-pdf:hover {
+  background-color: #545b62;
+  transform: translateY(-1px);
+}
+
+/* Responsividade para os botões de PDF */
+@media (max-width: 768px) {
+  .pdf-actions-container {
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+  
+  .btn-share,
+  .btn-download {
+    flex: 1;
+    min-width: 140px;
+  }
+  
+  .btn-clear-pdf {
+    order: 3;
+    margin-top: 0.5rem;
+  }
+}
+
 /* --- MODAL (Novo Checklist e Assinatura) --- */
 
 .modal-overlay {

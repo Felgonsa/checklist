@@ -7,12 +7,12 @@ import {
   deleteFoto, // Função para buscar dados de uma OS específica.
   getItens,
   getOrdemServicoById, // URL base da API (para construir a URL do PDF).
+  getPdf, // Função para obter o PDF da API
   saveAssinatura, // Função para buscar os itens padrão do checklist.
   saveRespostas, // Função para salvar as respostas do checklist.
   uploadFotos
 } from "../services/api"; // Importa todas as funções de interação com a API de um arquivo de serviços.
 
-import html2pdf from "html2pdf.js";
 import ChecklistReport from "../components/ChecklistReport";
 
 // Componente funcional principal para a página de Checklist.
@@ -150,104 +150,56 @@ const ChecklistPage = () => {
     };
   }, [photoPreviews]);
 
-  useEffect(() => {
-    // Este efeito só roda se isGeneratingPdf for true
-    if (isGeneratingPdf) {
-      // Adicionamos um pequeno timeout para dar tempo ao navegador de renderizar o componente
-      const timer = setTimeout(async () => {
-        const element = document.getElementById("pdf-content");
-
-        if (element) {
-          // Garante que o elemento existe antes de prosseguir
-          const opt = {
-            margin: 0,
-            filename: `checklist-carro-${
-              osData?.veiculo_placa || "veiculo"
-            }.pdf`,
-            image: { type: "jpeg", quality: 0.98 },
-            html2canvas: { scale: 2, useCORS: true },
-            jsPDF: { unit: "mm", format: "a4", orientation: "portrait" },
-          };
-
-          // Verifica se o navegador suporta a Web Share API
-          if (navigator.share) {
-            try {
-              // Para html2pdf.js versão 0.10.3, precisamos usar uma abordagem diferentes
-              // Primeiro geramos o PDF e tentamos capturar como blob
-              const pdf = await html2pdf()
-                .from(element)
-                .set(opt)
-                .outputPdf();
-              
-              // Converte a string base64 para blob
-              const base64Data = pdf.split(',')[1];
-              const byteCharacters = atob(base64Data);
-              const byteArrays = [];
-              
-              for (let offset = 0; offset < byteCharacters.length; offset += 512) {
-                const slice = byteCharacters.slice(offset, offset + 512);
-                const byteNumbers = new Array(slice.length);
-                for (let i = 0; i < slice.length; i++) {
-                  byteNumbers[i] = slice.charCodeAt(i);
-                }
-                const byteArray = new Uint8Array(byteNumbers);
-                byteArrays.push(byteArray);
-              }
-              
-              const blob = new Blob(byteArrays, { type: 'application/pdf' });
-              
-              // Cria um arquivo para compartilhar
-              const file = new File([blob], `checklist-carro-${osData?.veiculo_placa || "veiculo"}.pdf`, {
-                type: 'application/pdf'
-              });
-              
-              // Tenta compartilhar o arquivo
-              if (navigator.canShare && navigator.canShare({ files: [file] })) {
-                await navigator.share({
-                  files: [file],
-                  title: `Checklist - ${osData?.veiculo_placa || "Veículo"}`,
-                  text: `Checklist do veículo ${osData?.veiculo_placa || ""}`
-                });
-              } else {
-                // Se não pode compartilhar arquivos, tenta compartilhar texto
-                await navigator.share({
-                  title: `Checklist - ${osData?.veiculo_placa || "Veículo"}`,
-                  text: `Checklist do veículo ${osData?.veiculo_placa || ""}. O PDF foi gerado e está pronto para download.`
-                });
-              }
-            } catch (error) {
-              console.error('Erro ao compartilhar PDF:', error);
-              // Se falhar o compartilhamento, faz download normal
-              html2pdf()
-                .from(element)
-                .set(opt)
-                .save();
-            }
-          } else {
-            // Navegador não suporta Web Share API, faz download normal
-            html2pdf()
-              .from(element)
-              .set(opt)
-              .save();
-          }
-          
-          setIsGeneratingPdf(false);
-        } else {
-          // Se o elemento não for encontrado, cancela a operação
-          console.error("Elemento 'pdf-content' não encontrado no DOM.");
-          setIsGeneratingPdf(false);
-        }
-      }, 1000); // 100 milissegundos é um atraso imperceptível para o usuário
-
-      // Limpa o timer se o componente for desmontado (boa prática)
-      return () => clearTimeout(timer);
-    }
-  }, [isGeneratingPdf, osData]); // Roda quando isGeneratingPdf muda
-
-  // A função do botão agora só precisa mudar o estado
-  const handleGeneratePdf = () => {
+  // Função para gerar e compartilhar/download do PDF
+  const handleGeneratePdf = async () => {
     setIsGeneratingPdf(true);
+    let blobData = null; // Declarado fora para sobreviver no catch
+
+    try {
+      const response = await getPdf(id);
+      blobData = response.data;
+
+      const file = new File([blobData], `Checklist_OS_${osData?.id || id}.pdf`, { type: 'application/pdf' });
+
+      if (navigator.canShare && navigator.canShare({ files: [file] })) {
+        try {
+          await navigator.share({
+            files: [file],
+            title: `Checklist OS ${osData?.id || id}`,
+            text: `Segue o checklist da ordem de serviço do veículo ${osData?.veiculo_modelo || ''}.`
+          });
+          console.log('Compartilhado com sucesso.');
+          return; // Sai da função se o share deu certo
+        } catch (shareError) {
+          if (shareError.name === 'AbortError') {
+            console.log('Compartilhamento cancelado pelo usuário.');
+            return;
+          }
+          console.log('Share bloqueado por timeout/permissão, forçando download.', shareError);
+          // Se o share falhou por segurança do Android, o código segue reto para o fallback de download
+        }
+      }
+      
+      // Fallback: Se não suporta share ou falhou no bloco acima
+      if (blobData) {
+        const url = URL.createObjectURL(blobData);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `Checklist_OS_${osData?.id || id}.pdf`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+      }
+
+    } catch (error) {
+      console.error("Erro na API ao gerar PDF:", error);
+      alert("Erro ao buscar o PDF no servidor. Tente novamente.");
+    } finally {
+      setIsGeneratingPdf(false);
+    }
   };
+
 
   // --- Funções de Manipulação de Eventos ---
 

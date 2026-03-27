@@ -4,6 +4,7 @@ const { createClient } = require('@supabase/supabase-js');
 const { v4: uuidv4 } = require('uuid');
 const fs = require('fs');
 const path = require('path');
+const sharp = require('sharp');
 
 // Inicializa o cliente Supabase
 const supabaseUrl = process.env.SUPABASE_URL;
@@ -19,36 +20,83 @@ const uploadFotos = async (req, res) => {
   try {
     const fotosSalvas = [];
     for (const file of files) {
-      // Gera um nome único para o arquivo
-      const fileExtension = path.extname(file.originalname);
-      const fileName = `${uuidv4()}${fileExtension}`;
-      const filePath = `fotos-checklist/${fileName}`;
-      
-      // Faz upload para o Supabase Storage
-      const { data, error } = await supabase.storage
-        .from('fotos-checklist')
-        .upload(filePath, file.buffer, {
-          contentType: file.mimetype,
-          cacheControl: '3600',
-          upsert: false
-        });
-      
-      if (error) {
-        console.error('Erro ao fazer upload para Supabase:', error);
-        throw error;
+      try {
+        // Comprimir a imagem antes do upload
+        const compressedBuffer = await sharp(file.buffer)
+          .resize({ 
+            width: 1024, 
+            withoutEnlargement: true // Não aumenta imagens menores que 1024px
+          })
+          .jpeg({ 
+            quality: 80, // Qualidade de 80% (ótimo equilíbrio tamanho/qualidade)
+            mozjpeg: true // Otimização adicional
+          })
+          .toBuffer();
+
+        // Atualizar o mimetype para JPEG (já que sharp converte tudo para JPEG)
+        const compressedMimetype = 'image/jpeg';
+        
+        // Gera um nome único para o arquivo (agora sempre com extensão .jpg)
+        const fileName = `${uuidv4()}.jpg`;
+        const filePath = `fotos-checklist/${fileName}`;
+        
+        // Faz upload para o Supabase Storage com a imagem comprimida
+        const { data, error } = await supabase.storage
+          .from('fotos-checklist')
+          .upload(filePath, compressedBuffer, {
+            contentType: compressedMimetype,
+            cacheControl: '3600',
+            upsert: false
+          });
+        
+        if (error) {
+          console.error('Erro ao fazer upload para Supabase:', error);
+          throw error;
+        }
+        
+        // Obtém a URL pública do arquivo
+        const { data: publicUrlData } = supabase.storage
+          .from('fotos-checklist')
+          .getPublicUrl(filePath);
+        
+        const publicUrl = publicUrlData.publicUrl;
+        
+        // Salva a URL pública no banco de dados
+        const query = 'INSERT INTO checklist_foto (os_id, caminho_arquivo) VALUES ($1, $2) RETURNING *;';
+        const { rows } = await db.query(query, [os_id, publicUrl]);
+        fotosSalvas.push(rows[0]);
+      } catch (compressError) {
+        console.error('Erro ao comprimir imagem:', compressError);
+        // Em caso de erro na compressão, tenta fazer upload da imagem original
+        console.log('Tentando upload da imagem original devido a erro na compressão...');
+        
+        const fileExtension = path.extname(file.originalname);
+        const fileName = `${uuidv4()}${fileExtension}`;
+        const filePath = `fotos-checklist/${fileName}`;
+        
+        const { data, error } = await supabase.storage
+          .from('fotos-checklist')
+          .upload(filePath, file.buffer, {
+            contentType: file.mimetype,
+            cacheControl: '3600',
+            upsert: false
+          });
+        
+        if (error) {
+          console.error('Erro ao fazer upload da imagem original:', error);
+          throw error;
+        }
+        
+        const { data: publicUrlData } = supabase.storage
+          .from('fotos-checklist')
+          .getPublicUrl(filePath);
+        
+        const publicUrl = publicUrlData.publicUrl;
+        
+        const query = 'INSERT INTO checklist_foto (os_id, caminho_arquivo) VALUES ($1, $2) RETURNING *;';
+        const { rows } = await db.query(query, [os_id, publicUrl]);
+        fotosSalvas.push(rows[0]);
       }
-      
-      // Obtém a URL pública do arquivo
-      const { data: publicUrlData } = supabase.storage
-        .from('fotos-checklist')
-        .getPublicUrl(filePath);
-      
-      const publicUrl = publicUrlData.publicUrl;
-      
-      // Salva a URL pública no banco de dados
-      const query = 'INSERT INTO checklist_foto (os_id, caminho_arquivo) VALUES ($1, $2) RETURNING *;';
-      const { rows } = await db.query(query, [os_id, publicUrl]);
-      fotosSalvas.push(rows[0]);
     }
     res.status(201).json({ message: 'Fotos enviadas com sucesso!', data: fotosSalvas });
   } catch (error) {

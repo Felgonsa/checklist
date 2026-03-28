@@ -151,6 +151,50 @@ const ChecklistPage = () => {
     };
   }, [photoPreviews]);
 
+  // Aviso de abandono: alerta se o usuário tentar sair com fotos pendentes ou itens não salvos
+  useEffect(() => {
+    const handleBeforeUnload = (event) => {
+      // Verifica se há fotos pendentes de upload
+      const hasPendingPhotos = pendingPhotos.length > 0;
+      
+      // Verifica se há itens não salvos (comparando com o localStorage)
+      const savedDraft = localStorage.getItem(`checklist_rascunho_${id}`);
+      let hasUnsavedChanges = false;
+      
+      if (savedDraft) {
+        try {
+          const draftData = JSON.parse(savedDraft);
+          // Se há rascunho no localStorage, significa que há alterações não salvas
+          hasUnsavedChanges = true;
+        } catch (err) {
+          console.error("Erro ao verificar rascunho:", err);
+        }
+      }
+      
+      // Se há fotos pendentes OU itens não salvos, mostra alerta
+      if (hasPendingPhotos || hasUnsavedChanges) {
+        const message = 
+          (hasPendingPhotos && hasUnsavedChanges) 
+            ? "Você tem fotos pendentes de upload e alterações não salvas no checklist. Tem certeza que deseja sair?" 
+            : hasPendingPhotos 
+              ? "Você tem fotos pendentes de upload. Tem certeza que deseja sair?" 
+              : "Você tem alterações não salvas no checklist. Tem certeza que deseja sair?";
+        
+        event.preventDefault();
+        event.returnValue = message;
+        return message;
+      }
+    };
+
+    // Adiciona o event listener para beforeunload
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    
+    // Cleanup: remove o event listener quando o componente desmonta
+    return () => {
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+    };
+  }, [pendingPhotos, id, photoPreviews]);
+
   // Função 1: Preparar o PDF (trabalho pesado assíncrono)
   const prepararPdf = async () => {
     setIsGeneratingPdf(true);
@@ -262,8 +306,8 @@ const ChecklistPage = () => {
     }
   };
 
-  // Lida com a seleção de arquivos de foto pelo usuário.
-  const handleFileSelect = (event) => {
+  // Lida com a seleção de arquivos de foto pelo usuário (Upload Automático One-Touch)
+  const handleFileSelect = async (event) => {
     const files = event.target.files;
     if (!files || files.length === 0) return;
     
@@ -287,6 +331,55 @@ const ChecklistPage = () => {
     
     // Limpa o input para permitir nova seleção
     event.target.value = null;
+    
+    // Upload automático One-Touch: inicia o upload imediatamente
+    if (newPendingPhotos.length > 0) {
+      await handlePhotoUploadAuto(newPendingPhotos, newPreviews);
+    }
+  };
+  
+  // Função de upload automático (One-Touch)
+  const handlePhotoUploadAuto = async (photosToUpload, previewsToUpload) => {
+    if (photosToUpload.length === 0) return;
+    
+    setUploading(true); // Ativa o estado de upload
+    
+    const formData = new FormData();
+    formData.append("os_id", id);
+    
+    for (let i = 0; i < photosToUpload.length; i++) {
+      formData.append("fotos", photosToUpload[i]);
+    }
+    
+    try {
+      const response = await uploadFotos(formData);
+      
+      // Atualiza o estado 'osData' para incluir as novas fotos
+      setOsData((prevData) => ({
+        ...prevData,
+        fotos: [...prevData.fotos, ...response.data.data],
+      }));
+      
+      // Libera as URLs de preview das fotos enviadas
+      previewsToUpload.forEach(preview => {
+        URL.revokeObjectURL(preview.url);
+      });
+      
+      // Remove as fotos enviadas dos estados pendentes
+      setPendingPhotos(prev => prev.filter(photo => 
+        !photosToUpload.includes(photo)
+      ));
+      setPhotoPreviews(prev => prev.filter(preview => 
+        !previewsToUpload.find(p => p.id === preview.id)
+      ));
+      
+      toast.success("Fotos enviadas automaticamente com sucesso!");
+    } catch (err) {
+      toast.error("Erro ao enviar fotos automaticamente.");
+      console.error(err);
+    } finally {
+      setUploading(false);
+    }
   };
 
   // Lida com o upload das fotos selecionadas.
@@ -388,6 +481,42 @@ const ChecklistPage = () => {
     }
   };
 
+  // Função para verificar se há alterações não salvas antes de navegar
+  const checkUnsavedChanges = (e) => {
+    // Verifica se há fotos pendentes de upload
+    const hasPendingPhotos = pendingPhotos.length > 0;
+    
+    // Verifica se há itens não salvos (comparando com o localStorage)
+    const savedDraft = localStorage.getItem(`checklist_rascunho_${id}`);
+    let hasUnsavedChanges = false;
+    
+    if (savedDraft) {
+      try {
+        const draftData = JSON.parse(savedDraft);
+        // Se há rascunho no localStorage, significa que há alterações não salvas
+        hasUnsavedChanges = true;
+      } catch (err) {
+        console.error("Erro ao verificar rascunho:", err);
+      }
+    }
+    
+    // Se há fotos pendentes OU itens não salvos, pede confirmação
+    if (hasPendingPhotos || hasUnsavedChanges) {
+      const message = 
+        (hasPendingPhotos && hasUnsavedChanges) 
+          ? "Você tem fotos pendentes de upload e alterações não salvas no checklist. Tem certeza que deseja sair?" 
+          : hasPendingPhotos 
+            ? "Você tem fotos pendentes de upload. Tem certeza que deseja sair?" 
+            : "Você tem alterações não salvas no checklist. Tem certeza que deseja sair?";
+      
+      if (!window.confirm(message)) {
+        e.preventDefault();
+        return false;
+      }
+    }
+    return true;
+  };
+
   // --- Renderização Condicional ---
 
   // Exibe mensagem de carregamento enquanto os dados estão sendo buscados.
@@ -403,7 +532,11 @@ const ChecklistPage = () => {
       <Header />
       <div className="checklist-page teste">
         {/* Link para voltar à página anterior (lista de OSs). */}
-        <Link to="/home" className="back-link">
+        <Link 
+          to="/home" 
+          className="back-link"
+          onClick={checkUnsavedChanges}
+        >
           ← Voltar para a lista
         </Link>
 
@@ -654,8 +787,9 @@ const ChecklistPage = () => {
               onClick={handlePhotoUpload}
               disabled={pendingPhotos.length === 0 || uploading}
               className="btn-primary upload-submit-btn"
+              style={uploading ? { backgroundColor: '#ff9800', color: '#000000' } : {}}
             >
-              {uploading ? "Enviando..." : `Enviar Fotos (${pendingPhotos.length})`}
+              {uploading ? "⏳ Enviando imagem... Aguarde" : `Enviar Fotos (${pendingPhotos.length})`}
             </button>
           </div>
         </div>

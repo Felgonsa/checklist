@@ -261,33 +261,51 @@ body {
 }
 
 /* --- ESTILOS DE BOTÕES GLOBAIS --- */
-/* Estilos base para os botões principais de ação. */
+/* Estilos base para os botões principais de ação - WCAG Compliant para mobile */
 
 .btn-save,
 .btn-pdf,
 .btn-signature,
 .btn-new-checklist {
-  padding: 10px 20px;
-  margin: 10px;
+  padding: 16px 24px;
+  margin: 8px;
   border: none;
-  border-radius: 6px;
-  font-size: 16px;
-  font-weight: 500;
+  border-radius: 8px;
+  font-size: 18px;
+  font-weight: bold;
   cursor: pointer;
-  transition: background-color 0.2s, transform 0.1s;
+  transition: all 0.2s ease;
+  min-height: 56px;
+  min-width: 56px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .btn-save:hover,
 .btn-pdf:hover,
 .btn-signature:hover,
 .btn-new-checklist:hover {
-  transform: translateY(-1px);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+}
+
+.btn-save:active,
+.btn-pdf:active,
+.btn-signature:active,
+.btn-new-checklist:active {
+  transform: translateY(0);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
 }
 
 .btn-save:disabled {
   background-color: #aaa;
   cursor: not-allowed;
   transform: none;
+  box-shadow: none;
+  opacity: 0.7;
 }
 
 /* Cores específicas dos botões */
@@ -306,6 +324,41 @@ body {
 .btn-signature {
   background-color: var(--cor-info);
   color: white;
+}
+
+/* Botões de ação na página de checklist */
+.checklist-actions .btn-save,
+.checklist-actions .btn-pdf,
+.checklist-actions .btn-signature {
+  flex: 1;
+  min-width: 200px;
+  margin: 8px 4px;
+}
+
+/* Responsividade para botões de ação */
+@media (max-width: 768px) {
+  .btn-save,
+  .btn-pdf,
+  .btn-signature,
+  .btn-new-checklist {
+    padding: 14px 20px;
+    font-size: 16px;
+    min-height: 48px;
+    min-width: 48px;
+  }
+  
+  .checklist-actions .btn-save,
+  .checklist-actions .btn-pdf,
+  .checklist-actions .btn-signature {
+    flex: 1 1 100%;
+    min-width: 100%;
+    margin: 8px 0;
+  }
+  
+  .checklist-actions {
+    flex-direction: column;
+    gap: 12px;
+  }
 }
 
 /* --- PÁGINA INICIAL (HomePage) --- */
@@ -387,33 +440,49 @@ body {
 
 .checklist-page {
   text-align: left;
+  color: #000000; /* Alto contraste: preto puro para melhor legibilidade */
 }
 
 /* Cabeçalho com detalhes da OS */
 .os-details {
   background-color: var(--cor-card);
-  border: 1px solid var(--cor-borda);
+  border: 2px solid #000000; /* Borda mais espessa e escura */
   padding: 1.5rem;
   border-radius: 8px;
   margin-bottom: 2rem;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
 }
 
 .os-details h2 {
   margin: 0;
-  color: var(--cor-texto);
+  color: #000000; /* Preto puro para alto contraste */
+  font-weight: 700;
+}
+
+.os-details p {
+  color: #333333; /* Cinza escuro em vez de cinza claro */
+  font-weight: 500;
+  margin: 0.5rem 0;
 }
 
 /* Link para voltar */
 .back-link {
   display: inline-block;
   margin-bottom: 1.5rem;
-  color: var(--cor-principal);
+  color: #0000EE; /* Azul escuro tradicional para links */
   text-decoration: none;
   font-weight: bold;
+  font-size: 16px;
+  padding: 8px 12px;
+  border: 2px solid #0000EE;
+  border-radius: 6px;
+  background-color: #FFFFFF;
 }
 
 .back-link:hover {
-  text-decoration: underline;
+  text-decoration: none;
+  background-color: #0000EE;
+  color: #FFFFFF;
 }
 
 /* Container do formulário */
@@ -447,10 +516,11 @@ body {
   color: #334155;
 }
 
-/* Botões de Opção Customizados (Status) */
+/* Botões de Opção Customizados (Status) - WCAG Compliant */
 .status-options {
   display: flex;
   gap: 0.5rem;
+  flex-wrap: wrap;
 }
 
 .status-options input[type="radio"] {
@@ -459,29 +529,85 @@ body {
   width: 0;
 }
 
+.status-options label {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 44px;
+  min-height: 44px;
+  cursor: pointer;
+  margin: 2px;
+}
+
 .status-options label span {
-  display: inline-block;
-  padding: 6px 14px;
-  border-radius: 20px;
-  border: 1px solid var(--cor-borda);
-  color: var(--cor-secundaria);
-  font-size: 0.9rem;
-  font-weight: 500;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 12px 20px;
+  border-radius: 8px;
+  border: 2px solid var(--cor-borda);
+  color: var(--cor-texto);
+  font-size: 16px;
+  font-weight: bold;
   cursor: pointer;
   transition: all 0.2s ease;
+  min-width: 44px;
+  min-height: 44px;
+  width: 100%;
+  text-align: center;
+  box-sizing: border-box;
 }
 
 /* Estilo do botão quando HOVER */
 .status-options label:hover span {
-  border-color: var(--cor-texto);
-  color: var(--cor-texto);
+  border-color: var(--cor-principal);
+  background-color: rgba(0, 123, 255, 0.05);
+  transform: translateY(-1px);
 }
 
-/* Estilo do botão quando SELECIONADO (sem cores específicas) */
+/* Estilo do botão quando SELECIONADO */
 .status-options input[type="radio"]:checked + span {
   background-color: var(--cor-header);
   color: white;
   border-color: var(--cor-header);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+/* Cores específicas para cada status */
+.status-options input[type="radio"][value="ok"]:checked + span {
+  background-color: var(--cor-sucesso);
+  border-color: var(--cor-sucesso);
+}
+
+.status-options input[type="radio"][value="irregular"]:checked + span {
+  background-color: var(--cor-perigo);
+  border-color: var(--cor-perigo);
+}
+
+.status-options input[type="radio"][value="não aplicável"]:checked + span,
+.status-options input[type="radio"][value="na"]:checked + span,
+.status-options input[type="radio"][value="n/a"]:checked + span {
+  background-color: var(--cor-secundaria);
+  border-color: var(--cor-secundaria);
+}
+
+/* Responsividade para telas pequenas */
+@media (max-width: 768px) {
+  .status-options {
+    width: 100%;
+    justify-content: space-between;
+  }
+  
+  .status-options label {
+    flex: 1;
+    min-width: 0;
+  }
+  
+  .status-options label span {
+    padding: 12px 8px;
+    font-size: 15px;
+    width: 100%;
+  }
 }
 
 /* Campos de Texto e Observações */
@@ -545,26 +671,73 @@ body {
 }
 
 .delete-photo-btn {
-  place-self: start end;
-  margin: 8px;
+  place-self: end;
+  margin: 0;
   z-index: 2;
-  background-color: rgba(200, 50, 50, 0.7);
+  background-color: var(--cor-perigo);
   color: white;
   border: none;
-  border-radius: 50%;
-  width: 25px;
-  height: 25px;
+  border-radius: 0 0 8px 8px;
+  width: 100%;
+  min-height: 44px;
   font-size: 16px;
-  padding: 0;
+  font-weight: bold;
+  padding: 12px;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  transition: background-color 0.2s ease;
+  transition: all 0.2s ease;
+  gap: 8px;
 }
 
 .delete-photo-btn:hover {
-  background-color: rgba(200, 50, 50, 1);
+  background-color: #c82333;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(220, 53, 69, 0.3);
+}
+
+.delete-photo-btn:active {
+  transform: translateY(0);
+}
+
+/* Ajuste para o container da foto para acomodar o botão na base */
+.photo-container {
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  border-radius: 8px;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+  aspect-ratio: 1 / 1;
+  position: relative;
+  grid-template-rows: 1fr auto; /* Imagem ocupa espaço disponível, botão fica na base */
+}
+
+.photo-container > * {
+  grid-area: 1 / 1;
+}
+
+.photo-container img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  display: block;
+  grid-area: 1 / 1;
+}
+
+/* Botão de excluir posicionado na base */
+.photo-container .delete-photo-btn {
+  grid-area: 2 / 1;
+  border-radius: 0 0 8px 8px;
+}
+
+/* Para fotos pendentes, ajustar o botão também */
+.photo-container.pending .delete-photo-btn {
+  background-color: var(--cor-secundaria);
+}
+
+.photo-container.pending .delete-photo-btn:hover {
+  background-color: #5a6268;
 }
 
 /* Estilos para fotos pendentes */
@@ -783,18 +956,26 @@ body {
   align-items: center;
   gap: 1rem;
   margin-top: 0.5rem;
+  width: 100%;
+}
+
+.range-slider-with-markers {
+  position: relative;
+  width: 100%;
+  margin-bottom: 30px; /* Espaço para os marcadores */
 }
 
 .range-slider {
   -webkit-appearance: none; /* Remove o estilo padrão */
   appearance: none;
   width: 100%; /* Ocupa todo o espaço disponível */
-  height: 8px;
-  background: #e9ecef; /* Cor do trilho do slider */
-  border-radius: 5px;
+  height: 12px; /* Mais espesso para melhor toque */
+  background: linear-gradient(to right, #dc3545 0%, #ffc107 50%, #28a745 100%); /* Gradiente visual */
+  border-radius: 6px;
   outline: none;
   opacity: 0.9;
   transition: opacity 0.2s;
+  border: 2px solid #000000; /* Borda escura para contraste */
 }
 
 .range-slider:hover {
@@ -805,31 +986,87 @@ body {
 .range-slider::-webkit-slider-thumb {
   -webkit-appearance: none;
   appearance: none;
-  width: 20px;
-  height: 20px;
-  background: var(--cor-principal); /* Usa a cor azul principal */
+  width: 28px; /* Maior para melhor toque */
+  height: 28px;
+  background: #000000; /* Preto para alto contraste */
   border-radius: 50%;
   cursor: pointer;
-  border: 2px solid white;
-  box-shadow: 0 0 5px rgba(0, 0, 0, 0.2);
+  border: 3px solid #ffffff;
+  box-shadow: 0 0 8px rgba(0, 0, 0, 0.5);
 }
 
 /* Estilo do "pino" de arrastar para Firefox */
 .range-slider::-moz-range-thumb {
-  width: 20px;
-  height: 20px;
-  background: var(--cor-principal);
+  width: 28px;
+  height: 28px;
+  background: #000000;
   border-radius: 50%;
   cursor: pointer;
-  border: 2px solid white;
-  box-shadow: 0 0 5px rgba(0, 0, 0, 0.2);
+  border: 3px solid #ffffff;
+  box-shadow: 0 0 8px rgba(0, 0, 0, 0.5);
 }
 
 .range-slider-value {
-  font-weight: 600;
-  color: var(--cor-principal);
-  min-width: 50px; /* Garante que o texto não "pule" */
+  font-weight: 700;
+  color: #000000; /* Preto para alto contraste */
+  min-width: 60px;
   text-align: right;
+  font-size: 18px;
+  background-color: #ffffff;
+  padding: 4px 8px;
+  border-radius: 4px;
+  border: 2px solid #000000;
+}
+
+/* Marcadores visuais do slider */
+.range-markers {
+  position: absolute;
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  top: 25px; /* Posiciona abaixo do slider */
+}
+
+.range-marker {
+  position: absolute;
+  transform: translateX(-50%);
+  font-size: 14px;
+  font-weight: bold;
+  color: #000000; /* Preto para alto contraste */
+  background-color: rgba(255, 255, 255, 0.9);
+  padding: 2px 6px;
+  border-radius: 4px;
+  border: 1px solid #000000;
+  white-space: nowrap;
+  text-align: center;
+  min-width: 60px;
+}
+
+/* Responsividade para o slider */
+@media (max-width: 768px) {
+  .range-slider {
+    height: 16px; /* Ainda mais espesso em mobile */
+  }
+  
+  .range-slider::-webkit-slider-thumb {
+    width: 32px;
+    height: 32px;
+  }
+  
+  .range-slider::-moz-range-thumb {
+    width: 32px;
+    height: 32px;
+  }
+  
+  .range-marker {
+    font-size: 12px;
+    min-width: 50px;
+  }
+  
+  .range-slider-value {
+    font-size: 16px;
+    min-width: 50px;
+  }
 }
 
 /* Estilos para a barra de busca */
@@ -892,17 +1129,19 @@ body {
 .btn-camera, .btn-gallery {
   flex: 1;
   min-width: 200px;
-  padding: 12px 20px;
+  padding: 16px 24px;
   border: none;
   border-radius: 8px;
-  font-size: 1rem;
-  font-weight: 600;
+  font-size: 18px;
+  font-weight: bold;
   cursor: pointer;
   transition: all 0.2s ease;
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 8px;
+  gap: 12px;
+  min-height: 56px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .btn-camera {
@@ -933,20 +1172,23 @@ body {
 
 .btn-camera:active, .btn-gallery:active {
   transform: translateY(0);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
 }
 
 .upload-submit-btn {
   width: 100%;
-  padding: 12px 20px;
+  padding: 16px 24px;
   margin-top: 1rem;
   background-color: #6c757d;
   color: white;
   border: none;
   border-radius: 8px;
-  font-size: 1rem;
-  font-weight: 600;
+  font-size: 18px;
+  font-weight: bold;
   cursor: pointer;
   transition: all 0.2s ease;
+  min-height: 56px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .upload-submit-btn:hover:not(:disabled) {
@@ -955,10 +1197,16 @@ body {
   box-shadow: 0 4px 8px rgba(108, 117, 125, 0.2);
 }
 
+.upload-submit-btn:active:not(:disabled) {
+  transform: translateY(0);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
 .upload-submit-btn:disabled {
   opacity: 0.6;
   cursor: not-allowed;
   transform: none;
+  box-shadow: none;
 }
 
 /* Responsividade para os botões de upload */
@@ -970,10 +1218,14 @@ body {
   
   .btn-camera, .btn-gallery {
     min-width: 100%;
-    padding: 10px 16px;
+    padding: 14px 20px;
+    font-size: 16px;
+    min-height: 48px;
   }
   
   .upload-submit-btn {
-    padding: 10px 16px;
+    padding: 14px 20px;
+    font-size: 16px;
+    min-height: 48px;
   }
 }

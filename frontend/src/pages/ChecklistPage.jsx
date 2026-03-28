@@ -454,8 +454,11 @@ const ChecklistPage = () => {
                               )
                             }
                           />
-                          {/* Exibe a opção com a primeira letra maiúscula. */}
+                          {/* Exibe a opção com ícone e texto com primeira letra maiúscula. */}
                           <span>
+                            {statusOption === "ok" && "✅ "}
+                            {statusOption === "irregular" && "⚠️ "}
+                            {(statusOption === "não aplicável" || statusOption === "na" || statusOption === "n/a") && "➖ "}
                             {statusOption.charAt(0).toUpperCase() +
                               statusOption.slice(1)}
                           </span>
@@ -479,21 +482,29 @@ const ChecklistPage = () => {
                       const valorDoSlider = valorValido ? valorDoBanco : 50; // Padrão 50% se inválido.
                       return (
                         <div className="range-slider-container">
-                          <input
-                            type="range"
-                            min="0"
-                            max="100"
-                            step="2.5" // Passos de 2.5%
-                            className="range-slider"
-                            value={valorDoSlider} // Valor atual do slider.
-                            onChange={(e) =>
-                              handleRespostaChange(
-                                item.id,
-                                "observacao", // Campo 'observacao' é usado para o valor do range.
-                                e.target.value
-                              )
-                            }
-                          />
+                          <div className="range-slider-with-markers">
+                            <input
+                              type="range"
+                              min="0"
+                              max="100"
+                              step="2.5" // Passos de 2.5%
+                              className="range-slider"
+                              value={valorDoSlider} // Valor atual do slider.
+                              onChange={(e) =>
+                                handleRespostaChange(
+                                  item.id,
+                                  "observacao", // Campo 'observacao' é usado para o valor do range.
+                                  e.target.value
+                                )
+                              }
+                            />
+                            {/* Marcadores visuais para o slider */}
+                            <div className="range-markers">
+                              <span className="range-marker" style={{ left: '0%' }}>⛽ Vazio</span>
+                              <span className="range-marker" style={{ left: '50%' }}>½ 1/2</span>
+                              <span className="range-marker" style={{ left: '100%' }}>🟢 Cheio</span>
+                            </div>
+                          </div>
                           {/* Exibe o valor percentual ao lado do slider. */}
                           <span className="range-slider-value">
                             {valorDoSlider}%
@@ -554,7 +565,7 @@ const ChecklistPage = () => {
                     onClick={() => handlePhotoDelete(foto.id)}
                     className="delete-photo-btn"
                   >
-                    &times; {/* Caractere 'X' para fechar/deletar. */}
+                    🗑️ Remover Foto
                   </button>
                 </div>
               ))}
@@ -581,7 +592,7 @@ const ChecklistPage = () => {
                       onClick={() => handlePendingPhotoDelete(preview.id)}
                       className="delete-photo-btn"
                     >
-                      &times;
+                      🗑️ Remover Foto
                     </button>
                     <div className="pending-badge">Pendente</div>
                   </div>

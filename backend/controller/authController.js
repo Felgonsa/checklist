@@ -11,6 +11,9 @@ const login = async (req, res) => {
   }
 
   try {
+    // Normaliza o e-mail: converte para minúsculas e remove espaços
+    const emailNormalizado = email.toLowerCase().trim();
+    
     // Consulta SQL que agora busca o usuário E o nome da sua oficina
     const query = `
       SELECT 
@@ -21,9 +24,9 @@ const login = async (req, res) => {
       LEFT JOIN 
         oficinas o ON u.oficina_id = o.id
       WHERE 
-        u.email = $1;
+        LOWER(u.email) = LOWER($1);
     `;
-    const result = await db.query(query, [email]);
+    const result = await db.query(query, [emailNormalizado]);
     const usuario = result.rows[0];
 
     if (!usuario) {
@@ -50,6 +53,7 @@ const login = async (req, res) => {
       usuario: {
           nome: usuario.nome,
           role: usuario.role,
+          oficina_id: usuario.oficina_id, // Inclui o ID da oficina
           oficinaNome: usuario.oficina_nome || 'Sem oficina' // Envia o nome da oficina
       }
     });
@@ -73,8 +77,10 @@ const cadastrarUsuario = async (req, res) => {
     });
   }
   try {
+    // Normaliza o e-mail: converte para minúsculas e remove espaços
+    const emailNormalizado = email.toLowerCase().trim();
+    
     // Criptografa a senha antes de salvar
-
     const senhaHash = await bcrypt.hash(senha, 10);
 
     const query = `
@@ -87,7 +93,7 @@ const cadastrarUsuario = async (req, res) => {
 
   `;
 
-    const values = [nome, email, senhaHash, role, oficina_id];
+    const values = [nome, emailNormalizado, senhaHash, role, oficina_id];
 
     const result = await db.query(query, values);
 
@@ -141,7 +147,6 @@ const updateUsuario = async (req, res) => {
   const { id } = req.params;
 
   // Pega os dados, incluindo uma senha opcional
-
   const { nome, email, role, oficina_id, senha } = req.body;
 
   if (!nome || !email || !role || !oficina_id) {
@@ -151,12 +156,13 @@ const updateUsuario = async (req, res) => {
   }
 
   try {
+    // Normaliza o e-mail: converte para minúsculas e remove espaços
+    const emailNormalizado = email.toLowerCase().trim();
+    
     let query;
-
     let values;
 
     // Se uma nova senha foi fornecida, nós a criptografamos e incluímos no UPDATE
-
     if (senha) {
       const senhaHash = await bcrypt.hash(senha, 10);
 
@@ -168,10 +174,9 @@ const updateUsuario = async (req, res) => {
 
    `;
 
-      values = [nome, email, role, oficina_id, senhaHash, id];
+      values = [nome, emailNormalizado, role, oficina_id, senhaHash, id];
     } else {
       // Se nenhuma senha foi fornecida, atualizamos todo o resto, menos a senha
-
       query = `
 
     UPDATE usuarios SET nome = $1, email = $2, role = $3, oficina_id = $4
@@ -180,7 +185,7 @@ const updateUsuario = async (req, res) => {
 
    `;
 
-      values = [nome, email, role, oficina_id, id];
+      values = [nome, emailNormalizado, role, oficina_id, id];
     }
 
     const { rows } = await db.query(query, values);

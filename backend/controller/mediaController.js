@@ -14,10 +14,21 @@ const supabase = createClient(supabaseUrl, supabaseAnonKey);
 const uploadFotos = async (req, res) => {
   const { os_id } = req.body;
   const files = req.files;
+  const { role, oficina_id } = req.user;
+  
   if (!files || files.length === 0) {
     return res.status(400).json({ error: 'Nenhuma foto enviada.' });
   }
+  
   try {
+    // Verifica se o usuário tem permissão para acessar esta OS
+    if (role !== 'superadmin') {
+      const osCheck = await db.query('SELECT oficina_id FROM ordem_servico WHERE id = $1', [os_id]);
+      if (osCheck.rows.length === 0 || osCheck.rows[0].oficina_id !== oficina_id) {
+        return res.status(403).json({ error: 'Acesso proibido.' });
+      }
+    }
+    
     const fotosSalvas = [];
     for (const file of files) {
       try {
@@ -110,11 +121,26 @@ const uploadFotos = async (req, res) => {
 // Função assíncrona para deletar uma foto do Supabase Storage e remover seu registro do banco de dados.
 const deleteFoto = async (req, res) => {
   const { foto_id } = req.params;
+  const { role, oficina_id } = req.user;
+  
   try {
-    const pathResult = await db.query('SELECT caminho_arquivo FROM checklist_foto WHERE id = $1', [foto_id]);
+    // Primeiro, busca a foto e verifica se o usuário tem permissão
+    const pathResult = await db.query(`
+      SELECT cf.caminho_arquivo, os.oficina_id 
+      FROM checklist_foto cf
+      JOIN ordem_servico os ON cf.os_id = os.id
+      WHERE cf.id = $1
+    `, [foto_id]);
+    
     if (pathResult.rows.length === 0) {
       return res.status(404).json({ error: 'Foto não encontrada.' });
     }
+    
+    // Verifica permissão
+    if (role !== 'superadmin' && pathResult.rows[0].oficina_id !== oficina_id) {
+      return res.status(403).json({ error: 'Acesso proibido.' });
+    }
+    
     const publicUrl = pathResult.rows[0].caminho_arquivo;
     
     // Extrai o caminho do arquivo da URL pública do Supabase
@@ -152,6 +178,7 @@ const saveAssinatura = async (req, res) => {
   const { id } = req.params;
   // Extrai a string da assinatura (provavelmente em formato Base64 ou URL de imagem) do corpo da requisição.
   const { assinatura } = req.body;
+  const { role, oficina_id } = req.user;
 
   // Verifica se a assinatura foi fornecida.
   if (!assinatura) {
@@ -160,6 +187,14 @@ const saveAssinatura = async (req, res) => {
   }
 
   try {
+    // Verifica se o usuário tem permissão para acessar esta OS
+    if (role !== 'superadmin') {
+      const osCheck = await db.query('SELECT oficina_id FROM ordem_servico WHERE id = $1', [id]);
+      if (osCheck.rows.length === 0 || osCheck.rows[0].oficina_id !== oficina_id) {
+        return res.status(403).json({ error: 'Acesso proibido.' });
+      }
+    }
+    
     // Query SQL para atualizar a coluna 'assinatura_cliente' na tabela 'ordem_servico'.
     const query = 'UPDATE ordem_servico SET assinatura_cliente = $1 WHERE id = $2';
     // Executa a query de atualização com a assinatura e o ID da OS.

@@ -1,320 +1,423 @@
-/* ARQUIVO: frontend/src/components/ChecklistReport.css (PROFISSIONALIZADO) */
+/* ARQUIVO: frontend/src/components/ChecklistReport.css (LAUDO TÉCNICO PROFISSIONAL) */
 
-/* Define a "folha" principal do relatório com tamanho de A4 e fonte profissional */
-.report-container {
-  width: 210mm; /* Largura de uma página A4 */
-  min-height: 297mm; /* Altura mínima de uma página A4 */
-  padding: 20mm; /* Margens internas aumentadas */
-  box-sizing: border-box; /* Garante que o padding não aumente o tamanho total */
+/* ======================================================= */
+/* ESTILOS GERAIS PARA IMPRESSÃO (PRINT MEDIA) */
+/* ======================================================= */
+
+.laudo-container {
+  width: 210mm; /* Largura A4 */
+  min-height: 297mm; /* Altura A4 */
+  padding: 15mm; /* Margens internas */
+  box-sizing: border-box;
   background-color: white;
-  color: #333333; /* Cinza escuro para melhor legibilidade */
-  font-family: 'Segoe UI', 'Roboto', 'Helvetica Neue', Arial, sans-serif; /* Fontes mais limpas */
-  font-size: 11pt; /* Tamanho de fonte ligeiramente maior */
-  line-height: 1.5; /* Melhor espaçamento entre linhas */
+  color: #000000; /* Preto puro para melhor contraste e economia de tinta */
+  font-family: Arial, Helvetica, sans-serif; /* Fonte genérica sans-serif */
+  font-size: 12px; /* Tamanho base 12px conforme solicitado */
+  line-height: 1.4;
 }
 
-/* Cabeçalho do relatório com informações da oficina */
-.report-header {
-  text-align: center;
-  margin-bottom: 25px;
-  border-bottom: 2px solid #2c3e50; /* Borda mais escura e espessa */
-  padding-bottom: 15px;
-}
+/* ======================================================= */
+/* 1. CABEÇALHO PROFISSIONAL EM FORMATO DE CARD/GRID */
+/* ======================================================= */
 
-.report-logo {
-  max-width: 400px; /* Logo um pouco menor */
-  margin-bottom: 15px;
-  height: auto;
-}
-
-/* Informações da oficina */
-.workshop-info {
-  margin-top: 10px;
-  margin-bottom: 15px;
-  text-align: center;
-  font-size: 10pt;
-  color: #555;
-}
-
-.workshop-info p {
-  margin: 3px 0;
-}
-
-/* Define um estilo padrão para os títulos das seções */
-.report-container h1 {
-  font-size: 22pt;
-  margin: 10px 0 5px 0;
-  color: #2c3e50; /* Azul escuro profissional */
-  font-weight: 600;
-}
-
-.report-container h2 {
-  font-size: 16pt;
-  color: #34495e; /* Cinza azulado */
-  border-bottom: 1px solid #ecf0f1; /* Borda mais suave */
-  padding-bottom: 8px;
-  margin-top: 25px;
+.laudo-header {
   margin-bottom: 20px;
-  font-weight: 500;
 }
 
-/* Seção de detalhes da OS com layout mais profissional */
-.os-details-section {
-  background-color: #f8f9fa; /* Fundo sutil */
-  padding: 15px;
-  border-radius: 8px;
-  margin-bottom: 25px;
-  border-left: 4px solid #3498db; /* Destaque azul à esquerda */
-}
-
-.os-details-section p {
-  margin: 8px 0;
-  display: flex;
-  align-items: center;
-}
-
-.os-details-section strong {
-  min-width: 100px;
-  color: #2c3e50;
-}
-
-/* Grid de itens com melhor espaçamento e hierarquia visual */
-.items-grid {
+.header-card {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 15px; /* Espaçamento aumentado */
-}
-
-.item-card {
-  page-break-inside: avoid; /* Evita que um item seja cortado no meio da página */
-  background-color: white;
-  border: 1px solid #e0e0e0; /* Borda mais suave */
-  border-radius: 6px;
-  padding: 12px;
-  transition: box-shadow 0.2s;
-}
-
-.item-card:hover {
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1); /* Sombra sutil ao passar o mouse */
-}
-
-.item-card-title {
-  font-weight: 600;
-  color: #2c3e50;
-  font-size: 11pt;
-  display: block;
-  margin-bottom: 5px;
-}
-
-.item-card-status {
-  display: inline-block;
-  padding: 4px 10px;
+  gap: 20px;
+  border: 1px solid #e0e0e0; /* Borda fina cinza clara */
   border-radius: 4px;
-  font-size: 10pt;
-  font-weight: 500;
-  margin-top: 5px;
+  padding: 15px;
+  background-color: #f9f9f9;
+  page-break-inside: avoid;
 }
 
-/* Cores específicas para status */
-.item-card-status[data-status="ok"] {
+.header-left {
+  display: flex;
+  gap: 15px;
+  align-items: flex-start;
+}
+
+.logo-placeholder {
+  width: 80px;
+  height: 80px;
+  border: 1px solid #ddd;
+  background-color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.logo-image {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+}
+
+.workshop-data h3 {
+  margin: 0 0 8px 0;
+  font-size: 14px;
+  color: #000000;
+}
+
+.workshop-data p {
+  margin: 4px 0;
+  font-size: 11px;
+  color: #333333;
+}
+
+.workshop-data strong {
+  color: #000000;
+}
+
+.header-right h1 {
+  margin: 0 0 15px 0;
+  font-size: 18px;
+  text-align: center;
+  color: #000000;
+  text-transform: uppercase;
+}
+
+.os-data-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 6px;
+}
+
+.data-row {
+  display: flex;
+  justify-content: space-between;
+  border-bottom: 1px dotted #e0e0e0;
+  padding-bottom: 4px;
+}
+
+.data-label {
+  font-weight: bold;
+  color: #000000;
+  font-size: 11px;
+}
+
+.data-value {
+  color: #333333;
+  font-size: 11px;
+  text-align: right;
+}
+
+/* ======================================================= */
+/* 2. CHECKLIST EM TABELA/GRID DE DUAS COLUNAS */
+/* ======================================================= */
+
+.checklist-section {
+  margin-top: 25px;
+  page-break-inside: avoid;
+}
+
+.section-title {
+  font-size: 14px;
+  color: #000000;
+  margin: 0 0 15px 0;
+  padding-bottom: 5px;
+  border-bottom: 2px solid #000000;
+  text-transform: uppercase;
+}
+
+.checklist-table {
+  border: 1px solid #e0e0e0;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.table-header {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  background-color: #f0f0f0;
+  border-bottom: 2px solid #000000;
+  font-weight: bold;
+  color: #000000;
+  font-size: 12px;
+  padding: 10px 15px;
+}
+
+.col-item, .col-status {
+  padding: 5px;
+}
+
+.table-row {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  border-bottom: 1px solid #e0e0e0; /* Linha inferior sutil entre itens */
+  padding: 12px 15px;
+  align-items: center;
+  page-break-inside: avoid;
+}
+
+.table-row:last-child {
+  border-bottom: none;
+}
+
+.item-number {
+  font-weight: bold;
+  color: #000000;
+  margin-right: 5px;
+}
+
+.item-name {
+  color: #333333;
+}
+
+.item-obs {
+  margin-top: 5px;
+  font-size: 10px;
+  color: #666666;
+  font-style: italic;
+}
+
+/* Badges de status */
+.status-badge {
+  display: inline-block;
+  padding: 4px 8px;
+  border-radius: 3px;
+  font-size: 10px;
+  font-weight: bold;
+  text-transform: uppercase;
+  text-align: center;
+  min-width: 80px;
+}
+
+.status-ok {
   background-color: #d4edda;
   color: #155724;
   border: 1px solid #c3e6cb;
 }
 
-.item-card-status[data-status="irregular"] {
+.status-irregular {
   background-color: #f8d7da;
   color: #721c24;
   border: 1px solid #f5c6cb;
 }
 
-.item-card-status[data-status="não aplicável"],
-.item-card-status[data-status="na"],
-.item-card-status[data-status="n/a"] {
+.status-na {
   background-color: #e2e3e5;
   color: #383d41;
   border: 1px solid #d6d8db;
 }
 
-.item-card-obs {
-  font-style: italic;
-  color: #666;
-  margin-top: 8px;
-  font-size: 10pt;
-  padding-left: 10px;
-  border-left: 2px solid #ddd;
+.status-text {
+  color: #333333;
+  font-weight: bold;
 }
 
-/* Seção de fotos com quebra de página otimizada */
-.photos-section-pdf {
+/* ======================================================= */
+/* 3. GALERIA DE FOTOS COM CSS GRID */
+/* ======================================================= */
+
+.photos-section {
+  margin-top: 30px;
   page-break-inside: avoid; /* Evita que a seção seja cortada */
-  page-break-before: auto;
-  margin-top: 30px;
 }
 
-.section-description {
-  color: #666;
-  font-size: 10pt;
-  margin-bottom: 20px;
+.photos-count {
+  font-size: 11px;
+  color: #666666;
+  margin: 0 0 15px 0;
   font-style: italic;
 }
 
-.photos-grid-pdf {
+.photos-grid {
   display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 15px; /* Espaçamento aumentado */
+  grid-template-columns: repeat(3, 1fr); /* 3 fotos por linha no máximo */
+  gap: 10px;
 }
 
-.photo-item-pdf {
-  page-break-inside: avoid; /* IMPLEMENTAÇÃO: Evita que fotos sejam cortadas ao meio */
-  break-inside: avoid; /* Suporte moderno */
-  margin-bottom: 15px;
-  max-height: 200px; /* Altura máxima controlada */
+.photo-container {
+  page-break-inside: avoid !important; /* OBRIGATÓRIO: evita que fotos sejam cortadas ao meio */
+  break-inside: avoid;
+  border: 1px solid #e0e0e0;
+  border-radius: 4px;
   overflow: hidden;
-  border-radius: 6px;
-  border: 1px solid #ddd;
   background-color: #f9f9f9;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
 }
 
-.photo-item-pdf img {
+.photo-image {
   width: 100%;
-  height: 160px; /* Altura fixa para consistência */
-  object-fit: contain; /* Mantém proporção da imagem */
-  padding: 10px;
+  height: 200px; /* Altura padronizada conforme solicitado */
+  object-fit: cover; /* Cobre o espaço mantendo proporção */
+  display: block;
 }
 
-.photo-caption {
-  font-size: 9pt;
-  color: #666;
+.photo-info {
+  padding: 8px;
+  font-size: 10px;
+  color: #666666;
   text-align: center;
-  padding: 5px 10px;
-  background-color: #f0f0f0;
-  width: 100%;
-  border-top: 1px solid #ddd;
-}
-
-/* Subtítulo do relatório */
-.report-subtitle {
-  color: #666;
-  font-size: 12pt;
-  margin-top: 5px;
-  margin-bottom: 15px;
-  font-weight: 300;
-}
-
-/* Seção de assinatura */
-.signature-section-pdf {
-  margin-top: 40px;
-  text-align: center;
-  page-break-inside: avoid; /* Evita que a assinatura seja cortada */
-}
-
-.signature-box {
-  text-align: center;
-  margin-top: 30px;
-  padding: 25px;
-  border: 1px solid #ddd;
-  border-radius: 8px;
-  background-color: #f8f9fa;
-  display: inline-block;
-  min-width: 350px;
-  max-width: 500px;
-}
-
-.signature-title {
-  font-size: 12pt;
-  font-weight: 600;
-  color: #2c3e50;
-  margin-bottom: 15px;
-}
-
-.signature-box img {
-  max-height: 100px; /* Assinatura um pouco maior */
-  margin-bottom: 15px;
-  border: 1px solid #ddd;
-  padding: 5px;
+  border-top: 1px solid #e0e0e0;
   background-color: white;
 }
 
+.photo-number {
+  font-weight: bold;
+  color: #000000;
+}
+
+.photo-desc {
+  color: #666666;
+}
+
+/* ======================================================= */
+/* 4. ÁREA DE ASSINATURA CENTRALIZADA */
+/* ======================================================= */
+
+.signature-section {
+  margin-top: 40px;
+  text-align: center;
+  page-break-inside: avoid;
+}
+
+.signature-area {
+  display: inline-block;
+  margin-top: 20px;
+  padding: 20px;
+  min-width: 300px;
+}
+
 .signature-line {
-  border-top: 2px solid #2c3e50; /* Linha mais espessa */
-  margin: 20px auto;
-  width: 350px; /* Linha mais longa */
+  border-top: 2px solid #000000;
+  width: 250px;
+  margin: 30px auto 10px auto;
 }
 
 .signature-name {
-  font-size: 12pt;
-  font-weight: 600;
-  color: #2c3e50;
-  margin-top: 10px;
+  font-size: 14px;
+  font-weight: bold;
+  color: #000000;
+  margin: 10px 0 5px 0;
+}
+
+.signature-label {
+  font-size: 11px;
+  color: #666666;
+  margin: 0 0 10px 0;
+  font-style: italic;
 }
 
 .signature-date {
-  font-size: 10pt;
-  color: #666;
-  margin-top: 5px;
+  font-size: 10px;
+  color: #666666;
+  margin: 5px 0;
 }
 
 .signature-note {
-  font-size: 9pt;
-  color: #666;
-  font-style: italic;
+  font-size: 9px;
+  color: #666666;
   margin-top: 15px;
-  padding: 10px;
-  border-top: 1px dashed #ddd;
+  padding-top: 10px;
+  border-top: 1px dashed #e0e0e0;
+  font-style: italic;
+  max-width: 400px;
+  margin-left: auto;
+  margin-right: auto;
 }
 
-/* Rodapé do relatório */
-.report-footer {
-  margin-top: 50px;
+/* ======================================================= */
+/* RODAPÉ DO LAUDO */
+/* ======================================================= */
+
+.laudo-footer {
+  margin-top: 40px;
   text-align: center;
-  font-size: 9pt;
-  color: #666;
+  font-size: 10px; /* Tamanho 10px conforme solicitado para notas de rodapé */
+  color: #666666;
   page-break-inside: avoid;
 }
 
 .footer-line {
-  border-top: 1px solid #ddd;
+  border-top: 1px solid #e0e0e0;
   margin: 20px 0;
 }
 
 .footer-text {
-  margin: 15px 0;
+  margin: 10px 0;
   line-height: 1.4;
 }
 
-.footer-page-info {
-  font-size: 8pt;
-  color: #999;
+.footer-info {
+  font-size: 9px;
+  color: #999999;
   margin-top: 10px;
 }
 
-/* Regras de quebra de página para impressão */
+/* ======================================================= */
+/* REGRAS DE IMPRESSÃO (PRINT MEDIA QUERIES) */
+/* ======================================================= */
+
 @media print {
-  .report-container {
+  .laudo-container {
     width: 100%;
     min-height: auto;
-    padding: 0;
+    padding: 10mm;
     margin: 0;
   }
   
-  .item-card, 
-  .photo-item-pdf,
-  .signature-section-pdf {
+  /* Garante que elementos importantes não sejam cortados */
+  .table-row,
+  .photo-container,
+  .signature-section,
+  .laudo-footer {
     page-break-inside: avoid !important;
     break-inside: avoid !important;
   }
   
-  .photos-section-pdf {
-    page-break-before: always; /* Força nova página para fotos se necessário */
+  /* Força nova página para seções grandes se necessário */
+  .photos-section {
+    page-break-before: auto;
   }
   
-  /* Remove sombras e efeitos de hover na impressão */
-  .item-card:hover {
-    box-shadow: none;
+  /* Remove cores de fundo para economizar tinta */
+  .header-card,
+  .table-header,
+  .photo-container {
+    background-color: white !important;
+  }
+  
+  /* Garante que bordas sejam visíveis na impressão */
+  .header-card,
+  .checklist-table,
+  .photo-container {
+    border: 1px solid #000000 !important;
+  }
+  
+  /* Garante contraste máximo para texto */
+  .laudo-container,
+  .section-title,
+  .data-label,
+  .signature-name {
+    color: #000000 !important;
+  }
+  
+  /* Remove qualquer efeito de hover */
+  *:hover {
+    background-color: transparent !important;
   }
 }
+
+/* Responsividade para telas menores (caso visualize no navegador) */
+@media screen and (max-width: 768px) {
+  .laudo-container {
+    width: 100%;
+    padding: 10px;
+  }
+  
+  .header-card {
+    grid-template-columns: 1fr;
+    gap: 15px;
+  }
+  
+  .photos-grid {
+    grid-template-columns: repeat(2, 1fr); /* 2 fotos por linha em telas menores */
+  }
+}
+
+

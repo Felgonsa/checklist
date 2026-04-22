@@ -48,7 +48,7 @@ router.delete('/oficinas/:id', autenticarToken, verificarSuperadmin, oficinaCont
 
 // Rota para o usuário logado alterar sua própria senha
 
-
-
+// === ROTA DE PERFIL DO USUÁRIO ===
+router.get('/perfil', autenticarToken, authController.getPerfilUsuario);
 
 module.exports = router;

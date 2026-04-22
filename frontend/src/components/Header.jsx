@@ -31,6 +31,9 @@ const Header = () => {
             
             {/* SÓ MOSTRA O MENU DE ADMIN SE A ROLE FOR 'superadmin' */}
             {userRole === "superadmin" && <Link to="/admin" className="nav-link">Admin</Link>}
+            
+            {/* Link para Meu Perfil */}
+            
            
           </nav>
 
@@ -40,23 +43,14 @@ const Header = () => {
               <span className="user-name">{userName || "Usuário"}</span>
             </div>
             
-            {/* Avatar placeholder */}
+            {/* Avatar placeholder - agora é apenas visual, não clicável */}
 
             <Link to="/perfil" className="nav-link">
             <div className="user-avatar">
               {userName ? userName.charAt(0).toUpperCase() : "U"}
             </div>
             </Link>
-            
-            
-            {/* Logout button - modern and discreet */}
-            <button onClick={handleLogout} className="logout-btn" title="Sair">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
-                <polyline points="16 17 21 12 16 7"></polyline>
-                <line x1="21" y1="12" x2="9" y2="12"></line>
-              </svg>
-            </button>
+           
           </div>
         </div>
       </div>

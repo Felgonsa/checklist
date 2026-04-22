@@ -1,17 +1,17 @@
-import { Routes, Route } from 'react-router-dom';
-import { useEffect } from 'react';
 import { jwtDecode } from 'jwt-decode';
+import { useEffect } from 'react';
+import { Route, Routes } from 'react-router-dom';
 import { logout } from './services/api'; // Importa nossa nova função
 
-import HomePage from './pages/HomePage';
-import ChecklistPage from './pages/ChecklistPage';
-import LoginPage from './pages/LoginPage';
-import ProtectedRoute from './components/ProtectedRoute';
-import './App.css';
-import AdminPage from './pages/AdminPage'; // Importa a nova página de administração
-import ProfilePage from './pages/ProfilePage'; // Importa a nova página de perfil 
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+import './App.css';
+import ProtectedRoute from './components/ProtectedRoute';
+import AdminPage from './pages/AdminPage'; // Importa a nova página de administração
+import ChecklistPage from './pages/ChecklistPage';
+import HomePage from './pages/HomePage';
+import LoginPage from './pages/LoginPage';
+import PerfilPage from './pages/PerfilPage'; // Importa a nova página de perfil
 
 function App() {
   // Este useEffect roda apenas uma vez, quando o aplicativo carrega
@@ -55,7 +55,7 @@ function App() {
         <Route path="/home" element={<HomePage />} />
         <Route path="/checklist/:id" element={<ChecklistPage />} />
         <Route path="/admin" element={<AdminPage />} />
-        <Route path="/perfil" element={<ProfilePage />} />
+        <Route path="/perfil" element={<PerfilPage />} />
       </Route>
       
     </Routes>

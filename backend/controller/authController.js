@@ -278,6 +278,59 @@ const changePassword = async (req, res) => {
   }
 };
 
+// --- FUNÇÃO PARA OBTER PERFIL DO USUÁRIO LOGADO ---
+const getPerfilUsuario = async (req, res) => {
+  try {
+    // Extrai o ID do usuário do token JWT (decodificado pelo middleware)
+    const userId = req.user.id;
+
+    // Query com JOIN entre usuarios e oficinas
+    // Nota: A tabela oficinas não tem campo 'endereco' no schema atual
+    const query = `
+      SELECT 
+        u.id, u.nome, u.email, u.role, u.cpf,
+        o.id as oficina_id, o.nome_fantasia, o.cnpj, o.email as oficina_email, o.telefone
+      FROM 
+        usuarios u
+      LEFT JOIN 
+        oficinas o ON u.oficina_id = o.id
+      WHERE 
+        u.id = $1;
+    `;
+
+    const result = await db.query(query, [userId]);
+    
+    if (result.rows.length === 0) {
+      return res.status(404).json({ message: "Usuário não encontrado." });
+    }
+
+    const usuario = result.rows[0];
+    
+    // Formata a resposta conforme solicitado
+    const perfil = {
+      usuario: {
+        nome: usuario.nome,
+        email: usuario.email,
+        role: usuario.role,
+        cpf: usuario.cpf
+      },
+      oficina: usuario.oficina_id ? {
+        id: usuario.oficina_id,
+        nome_fantasia: usuario.nome_fantasia,
+        cnpj: usuario.cnpj,
+        email: usuario.oficina_email,
+        telefone: usuario.telefone
+        // endereco: null // Campo não existe no schema atual
+      } : null
+    };
+
+    res.status(200).json(perfil);
+  } catch (error) {
+    console.error("Erro ao buscar perfil do usuário:", error);
+    res.status(500).json({ message: "Erro interno do servidor." });
+  }
+};
+
 module.exports = {
   login,
   cadastrarUsuario,
@@ -285,4 +338,5 @@ module.exports = {
   updateUsuario,
   deleteUsuario,
   changePassword,
+  getPerfilUsuario,
 };

@@ -8,7 +8,8 @@ const path = require('path');
 
 app.use(cors({
   origin: [
-    'https://app.felgon.com.br' 
+    'https://app.felgon.com.br',
+    'http://localhost:5173'
   ],
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization'],

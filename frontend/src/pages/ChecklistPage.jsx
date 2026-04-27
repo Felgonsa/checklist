@@ -57,13 +57,13 @@ const ChecklistPage = () => {
       setLoading(true); // Ativa o estado de carregamento.
       setError(null); // Limpa qualquer erro anterior.
       try {
-        // Usa `Promise.all` para buscar os dados da OS e os itens do checklist em paralelo.
-        const [osResponse, itensResponse] = await Promise.all([
-          getOrdemServicoById(id), // Busca os dados da OS pelo ID.
-          getItens(), // Busca todos os itens padrão do checklist.
-        ]);
-
+        // 1. Primeiro busca os dados da OS para obter o oficina_id
+        const osResponse = await getOrdemServicoById(id);
         setOsData(osResponse.data); // Atualiza o estado com os dados da OS.
+
+        // 2. Depois busca os itens do checklist filtrando pela oficina da OS
+        //    Isso garante que mesmo o superadmin veja apenas os itens da oficina correta
+        const itensResponse = await getItens(osResponse.data.oficina_id);
         setChecklistItens(itensResponse.data); // Atualiza o estado com os itens do checklist.
 
         // Inicializa o objeto de respostas com valores padrão para todos os itens do checklist.
@@ -198,9 +198,13 @@ const ChecklistPage = () => {
   // Função 1: Preparar o PDF (trabalho pesado assíncrono)
   const prepararPdf = async () => {
     setIsGeneratingPdf(true);
+
+    console.log(osData);
+    
+
     try {
       const response = await getPdf(id);
-      const file = new File([response.data], `Checklist_OS_${osData?.id || id}.pdf`, { type: 'application/pdf' });
+      const file = new File([response.data], `Checklist_${osData?.veiculo_modelo}_${osData?.veiculo_placa || id}.pdf`, { type: 'application/pdf' });
       setPdfFile(file);
       toast.success("PDF preparado com sucesso!");
     } catch (error) {
@@ -698,7 +702,7 @@ const ChecklistPage = () => {
                     onClick={() => handlePhotoDelete(foto.id)}
                     className="delete-photo-btn"
                   >
-                    🗑️ Remover Foto
+                    🗑️ 
                   </button>
                 </div>
               ))}
@@ -725,7 +729,7 @@ const ChecklistPage = () => {
                       onClick={() => handlePendingPhotoDelete(preview.id)}
                       className="delete-photo-btn"
                     >
-                      🗑️ Remover Foto
+                      🗑️
                     </button>
                     <div className="pending-badge">Pendente</div>
                   </div>

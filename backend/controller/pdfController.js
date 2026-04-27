@@ -12,7 +12,147 @@ const PDFDocument = require('pdfkit');
 const axios = require('axios');
 const { log } = require('console');
 
-// ---
+// --- Funções Auxiliares (Componentes Visuais) ---
+
+/**
+ * @function drawLabelValue
+ * @description Função auxiliar para desenhar uma linha com label (Bold, #555) e value (Normal, #000)
+ *              na mesma linha usando o método `continued: true` do PDFKit.
+ * @param {Object} doc - Instância do PDFDocument.
+ * @param {string} label - Texto do rótulo (ex: "Cliente:").
+ * @param {string} value - Texto do valor (ex: "Felipe").
+ * @param {number} x - Posição X.
+ * @param {number} y - Posição Y.
+ * @param {Object} options - Opções adicionais (ex: width).
+ */
+const drawLabelValue = (doc, label, value, x, y, options = {}) => {
+  const width = options.width || 200;
+  // Label em Bold #555
+  doc.font('Helvetica-Bold')
+    .fillColor('#555555')
+    .fontSize(10)
+    .text(label, x, y, { continued: true, width });
+  // Value em Normal #000 na mesma linha
+  doc.font('Helvetica')
+    .fillColor('#000000')
+    .fontSize(10)
+    .text(value || 'N/A', { width });
+};
+
+/**
+ * @function drawHeader
+ * @description Desenha o cabeçalho vertical e centralizado da oficina e dados da OS no PDF.
+ *              Layout empilhado: Nome da Oficina, dados da oficina, linha divisória,
+ *              título "Checklist", dados do cliente/OS em formato agrupado.
+ *              Tudo alinhado ao centro com tipografia limpa.
+ * @param {Object} doc - Instância do PDFDocument.
+ * @param {Object|null} oficinaData - Dados da oficina (nome_fantasia, cnpj, telefone, email).
+ * @param {Object} osData - Dados da ordem de serviço.
+ */
+const drawHeader = (doc, oficinaData, osData) => {
+  const margin = 50;
+  const pageWidth = doc.page.width - margin * 2;
+
+  // ============================================================
+  // 1. BLOCO DA OFICINA (TOPO)
+  // ============================================================
+
+  // Nome da Oficina: Helvetica-Bold 20, preto, center
+  doc.font('Helvetica-Bold')
+    .fillColor('#000000')
+    .fontSize(20)
+    .text(oficinaData?.nome_fantasia || 'Oficina', margin, doc.y, {
+      align: 'center',
+      width: pageWidth
+    });
+
+  // Pula uma linha curta
+  doc.moveDown(0.5);
+
+  // Dados da Oficina: CNPJ | Telefone | Email — Helvetica 10, cinza #555, center
+  const oficinaInfo = [
+    oficinaData?.cnpj,
+    oficinaData?.telefone,
+    oficinaData?.email
+  ].filter(Boolean).join(' | ');
+
+  doc.font('Helvetica')
+    .fillColor('#555555')
+    .fontSize(10)
+    .text(oficinaInfo || 'Dados não disponíveis', {
+      align: 'center',
+      width: pageWidth
+    });
+
+  // ============================================================
+  // 2. DIVISÓRIA E TÍTULO
+  // ============================================================
+
+  // Pula um espaço antes da linha
+  doc.moveDown(0.8);
+
+  // Linha horizontal cinza (#CCCCCC) cruzando a página
+  const lineY = doc.y;
+  doc.strokeColor('#CCCCCC')
+    .lineWidth(1)
+    .moveTo(margin, lineY)
+    .lineTo(margin + pageWidth, lineY)
+    .stroke();
+
+  // Pula um espaço e adiciona o título "Checklist"
+  doc.moveDown(0.8);
+  doc.font('Helvetica-Bold')
+    .fillColor('#000000')
+    .fontSize(20)
+    .text('Checklist', {
+      align: 'center',
+      width: pageWidth
+    });
+
+  // ============================================================
+  // 3. BLOCO DO CLIENTE/OS (ABAIXO DO CHECKLIST)
+  // ============================================================
+
+  // Pula um pequeno espaço
+  doc.moveDown(0.5);
+
+  // Formata a data
+  const dataFormatada = new Date(osData.data).toLocaleString('pt-BR', {
+    timeZone: 'America/Campo_Grande'
+  });
+
+  // Linha 1: Cliente: [Nome] | Veículo: [Modelo] | Placa: [Placa]
+  const clienteLinha1 = [
+    `Cliente: ${osData.cliente_nome || 'N/A'}`,
+    `Veículo: ${osData.veiculo_modelo || 'N/A'}`,
+    `Placa: ${osData.veiculo_placa || 'N/A'}`
+  ].join(' | ');
+
+  doc.font('Helvetica')
+    .fillColor('#555555')
+    .fontSize(10)
+    .text(clienteLinha1, {
+      align: 'center',
+      width: pageWidth
+    });
+
+  // Linha 2: Data da Vistoria: [Data] | Seguradora: [Seguradora] (se houver)
+  const clienteLinha2 = osData.seguradora_nome
+    ? `Data da Vistoria: ${dataFormatada} | Seguradora: ${osData.seguradora_nome}`
+    : `Data da Vistoria: ${dataFormatada}`;
+
+  doc.font('Helvetica')
+    .fillColor('#555555')
+    .fontSize(10)
+    .text(clienteLinha2, {
+      align: 'center',
+      width: pageWidth
+    });
+
+  // Restaura cor e pula espaço extra para separar do grid de itens
+  doc.fillColor('black');
+  doc.moveDown(2);
+};
 
 /**
  * @function generatePdf
@@ -147,82 +287,8 @@ const generatePdf = async (req, res) => {
 
     // --- ETAPA 4: ADICIONAR CONTEÚDO AO PDF ---
 
-    // --- Cabeçalho Dinâmico da Oficina ---
-    
-    // Se houver dados da oficina, adiciona o cabeçalho dinâmico
-    if (oficinaData) {
-      // Nome fantasia da oficina (título principal)
-      doc.fontSize(20)
-        .font('Helvetica-Bold')
-        .text(oficinaData.nome_fantasia, { align: 'center' });
-      
-      doc.moveDown(0.5);
-      
-      // Informações de contato (CNPJ, telefone, email)
-      doc.fontSize(10)
-        .font('Helvetica')
-        .fillColor('#555555'); // Cor cinza escuro
-      
-      // Formata os dados de contato
-      const contatoInfo = [];
-      if (oficinaData.cnpj) {
-        contatoInfo.push(`CNPJ: ${oficinaData.cnpj}`);
-      }
-      if (oficinaData.telefone) {
-        contatoInfo.push(`Telefone: ${oficinaData.telefone}`);
-      }
-      if (oficinaData.email) {
-        contatoInfo.push(`Email: ${oficinaData.email}`);
-      }
-      
-      if (contatoInfo.length > 0) {
-        doc.text(contatoInfo.join(' | '), { align: 'center' });
-      }
-      
-      doc.fillColor('black'); // Restaura cor preta
-      doc.moveDown(1);
-      
-      // Linha horizontal separadora
-      const lineY = doc.y;
-      const margin = 50;
-      doc.strokeColor('#cccccc')
-        .lineWidth(1)
-        .moveTo(margin, lineY)
-        .lineTo(doc.page.width - margin, lineY)
-        .stroke();
-      
-      doc.moveDown(1.5);
-    }
-    
-    // Adiciona o título principal do documento.
-    doc.fontSize(20) // Define o tamanho da fonte.
-      .font('Helvetica-Bold') // Define a fonte como Helvetica em negrito.
-      .text(
-        'Checklist', // Texto do título.
-        { align: 'center' } // Alinha o texto ao centro da página.
-      );
-
-    // Adiciona duas linhas de espaço vertical.
-    doc.moveDown(2);
-
-    // --- Detalhes da Ordem de Serviço (OS) ---
-
-    // Define o tamanho da fonte para os detalhes da OS.
-    doc.fontSize(12);
-    // Adiciona os detalhes da OS usando os dados obtidos do banco de dados.
-    doc.text(`Cliente: ${osData.cliente_nome}`);
-    doc.text(`Veículo: ${osData.veiculo_modelo}`);
-    doc.text(`Placa: ${osData.veiculo_placa}`);
-    // Formata a data da vistoria para o padrão brasileiro e o fuso horário de Campo Grande.
-    doc.text(`Data da Vistoria: ${new Date(osData.data).toLocaleString('pt-BR', {
-      timeZone: 'America/Campo_Grande'
-    })}`);
-    // Adiciona o nome da seguradora apenas se ele existir nos dados da OS.
-    if (osData.seguradora_nome) {
-      doc.text(`Seguradora: ${osData.seguradora_nome}`);
-    }
-    // Adiciona duas linhas de espaço vertical.
-    doc.moveDown(2);
+    // --- Cabeçalho Dinâmico Vertical e Centralizado ---
+    drawHeader(doc, oficinaData, osData);
 
     // --- Seção de Itens do Checklist ---
 

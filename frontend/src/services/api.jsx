@@ -68,7 +68,13 @@ export const logout = () => {
 };
 
 // Busca todos os itens padrão do checklist.
-export const getItens = () => api.get('/itens');
+// Aceita um parâmetro opcional 'oficina_id' para filtrar os itens por oficina.
+// Isso é essencial para que o superadmin, ao acessar a tela de uma OS específica,
+// veja apenas os itens da oficina vinculada àquela OS (evitando duplicação de itens de múltiplos tenants).
+export const getItens = (oficinaId) => {
+  const params = oficinaId ? { oficina_id: oficinaId } : {};
+  return api.get('/itens', { params });
+};
 
 // Busca uma lista paginada de ordens de serviço, com opção de busca.
 // Parâmetros: 'page' (página atual), 'limit' (itens por página), 'search' (termo de busca).

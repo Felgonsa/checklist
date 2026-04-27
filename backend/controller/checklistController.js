@@ -8,18 +8,19 @@ const db = require('../db/db.js');
 const getChecklistItens = async (req, res) => {
   try {
     const { role, oficina_id } = req.user;
+    // Aceita um parâmetro opcional 'oficina_id' na query string.
+    // Isso permite que o superadmin, ao acessar a tela de uma OS específica,
+    // filtre os itens apenas da oficina vinculada àquela OS.
+    const oficinaIdFilter = req.query.oficina_id || oficina_id;
     
     let query;
     let values = [];
     
-    if (role === 'superadmin') {
-      // Superadmin pode ver todos os itens de todas as oficinas
-      query = 'SELECT * FROM checklist_item ORDER BY ordem';
-    } else {
-      // Usuários normais só podem ver os itens da sua própria oficina
-      query = 'SELECT * FROM checklist_item WHERE oficina_id = $1 ORDER BY ordem';
-      values = [oficina_id];
-    }
+    // TODOS os usuários (incluindo superadmin) agora filtram por oficina_id.
+    // O superadmin pode passar o oficina_id via query param, enquanto usuários
+    // normais usam o oficina_id do próprio token JWT.
+    query = 'SELECT * FROM checklist_item WHERE oficina_id = $1 ORDER BY ordem';
+    values = [oficinaIdFilter];
     
     // Executa a query para selecionar os itens da tabela 'checklist_item'.
     const { rows } = await db.query(query, values);

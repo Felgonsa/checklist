@@ -1,6 +1,5 @@
 // ARQUIVO: frontend/src/components/ChecklistReport.jsx (LAUDO TÉCNICO PROFISSIONAL)
 
-import header from '../images/header.png'; // Importa o logo se necessário
 import './ChecklistReport.css';
 
 const ChecklistReport = ({ osData, checklistItens, respostasMap }) => {
@@ -45,7 +44,7 @@ const ChecklistReport = ({ osData, checklistItens, respostasMap }) => {
           {/* Lado Esquerdo: Logo e dados da oficina */}
           <div className="header-left">
             <div className="logo-placeholder">
-              <img src={header} alt="Logo da Oficina" className="logo-image" />
+              {/* <img src={header} alt="Logo da Oficina" className="logo-image" /> */}
             </div>
             <div className="workshop-data">
               <h3>{osData.oficina_nome || "Auto Center Premium"}</h3>

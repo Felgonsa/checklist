@@ -9,6 +9,7 @@ const path = require('path');
 app.use(cors({
   origin: [
     'https://app.felgon.com.br',
+    'https://www.vistoracar.com.br',
     'http://localhost:5173'
   ],
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
